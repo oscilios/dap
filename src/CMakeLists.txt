@@ -1,0 +1,8 @@
+add_subdirectory(base)
+add_subdirectory(threadsafe)
+add_subdirectory(fastmath)
+add_subdirectory(audioio)
+add_subdirectory(dsp)
+add_subdirectory(crtp)
+add_subdirectory(osc)
+add_subdirectory(examples)
