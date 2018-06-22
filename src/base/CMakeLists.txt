@@ -7,7 +7,6 @@ set (headers
     SystemCommon.h
     ThreadJoiner.h
     Any.h
-    ContainerView.h
     Semaphore.h
     SystemAnnotations.h
     Thread.h
