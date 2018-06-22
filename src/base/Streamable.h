@@ -88,15 +88,6 @@ namespace dap
         return streamContainer(out, c);
     }
 
-    // type to string
-    template <typename T>
-    inline std::string valueAsString(const T& value)
-    {
-        std::stringstream ss;
-        ss << value;
-        return ss.str();
-    }
-
     template <typename T>
     inline std::string typeMapToString(const char* desc, const std::map<T, const char*>& typeMap)
     {
