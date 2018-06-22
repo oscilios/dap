@@ -87,20 +87,6 @@ namespace dap
     {
         return streamContainer(out, c);
     }
-
-    template <typename T>
-    inline std::string typeMapToString(const char* desc, const std::map<T, const char*>& typeMap)
-    {
-        std::stringstream ss;
-        ss << desc << "{ ";
-        for (auto& p : typeMap)
-        {
-            ss << p.first << " : " << p.second << " ";
-        }
-        ss << "}";
-        return ss.str();
-    }
-
 } // namespace
 
 #endif // DAP_BASE_STREAMABLE_H
