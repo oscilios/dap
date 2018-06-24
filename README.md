@@ -38,19 +38,22 @@ using mod_control_t = decltype(control_osc_t{} + control_t{});
 using fm_t = osc_t<control_t, mod_control_t, control_t>;
 
 fm_t fm_osc;
-osc.input("gain"_s).input("value"_s) = 1.0f;
-osc.input("frequency"_s).input("x"_s).input("value"_s) = 440.0f; // carrier frequency
+samplerate_t samplerate = 48000.0f;
+float c = 440.0f; // carrier frequency
+float m = 110.0f; // modulating frequency
+float I = 0.5f;   // modulation index
+
+osc.input("gain"_s).input("value"_s) = 0.5f;
+osc.input("frequency"_s).input("x"_s).input("value"_s) = c;
 osc.input("phase"_s).input("value"_s) = 0.0f;
-osc.input("samplerate"_s) = 48000.0f;
+osc.input("samplerate"_s) = samplerate;
 osc.input("shape"_s) = osc_shape_t::Sine;
 
-
-// modulation
 auto& modulator = osc.input("frequency"_s).input("y"_s);
-modulator.input("gain"_s).input("value"_s) = 50.0f;
-modulator.input("frequency"_s).input("value"_s) = 110.0f;
+modulator.input("gain"_s).input("value"_s) = m*I;
+modulator.input("frequency"_s).input("value"_s) = m;
 modulator.input("phase"_s).input("value"_s) = 0.0f;
-modulator.input("samplerate"_s) = 48000.0f;
+modulator.input("samplerate"_s) = samplerate;
 modulator.input("shape"_s) = osc_shape_t::Sine;
 
 while (true)
