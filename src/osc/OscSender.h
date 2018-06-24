@@ -23,19 +23,6 @@ class dap::OscSender
     osc::OutboundPacketStream m_packet;
     bool m_isBundled{false};
 
-    template <typename T>
-    void append(const T& x)
-    {
-        m_packet << x;
-    }
-
-    template <typename T, typename... Values>
-    void append(const T& x, const Values&... values)
-    {
-        append(x);
-        return append(values...);
-    }
-
 public:
     struct UnbalancedEndBundle : std::exception
     {
@@ -59,7 +46,7 @@ public:
         if (!m_isBundled)
             m_packet.Clear();
         m_packet << osc::BeginMessage(msg.c_str());
-        append(values...);
+        (m_packet << ... << values);
         m_packet << osc::EndMessage;
         if (!m_isBundled)
             m_socket.Send(m_packet.Data(), m_packet.Size());

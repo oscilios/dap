@@ -1,4 +1,5 @@
 #include "osc/OscReceiver.h"
+#include "osc/OscSender.h"
 #include <oscpack/ip/IpEndpointName.h>
 #include <oscpack/ip/UdpSocket.h>
 #include <oscpack/osc/OscOutboundPacketStream.h>
@@ -8,50 +9,9 @@ using namespace testing;
 using namespace dap;
 
 #define IP_MTU_SIZE 1536
-class DummyOscSender
-{
-    char buffer[IP_MTU_SIZE];
-    UdpTransmitSocket socket;
-    osc::OutboundPacketStream p;
-
-    template <typename T>
-    void append(const T& x)
-    {
-        p << x;
-    }
-
-    template <typename T, typename... Values>
-    void append(const T& x, Values... values)
-    {
-        append(x);
-        const size_t size = sizeof...(values);
-        if (size > 0)
-            return append(values...);
-    }
-
-public:
-    DummyOscSender(const IpEndpointName& host)
-    : socket(host)
-    , p(buffer, IP_MTU_SIZE)
-    {
-    }
-    template <typename... Values>
-    void send(const std::string& msg, Values... values)
-    {
-        p.Clear();
-        p << osc::BeginMessage(msg.c_str());
-        append(values...);
-        p << osc::EndMessage;
-        socket.Send(p.Data(), p.Size());
-    }
-};
-
 TEST(OscReceiverTest, simple)
 {
-    const char* hostName = "localhost";
-    int port             = 7000;
-    IpEndpointName host(hostName, port);
-    DummyOscSender sender(host);
+    OscSender sender("localhost", 7000);
 
     OscReceiver oscReceiver;
     int n = 0;
