@@ -1,11 +1,14 @@
 # dap
 digital algorithm processing library
 
-I started this repository for developping a dsp library. Things turned around and ended up working on a library for compile time graphs. You should check src/examples/crtp_synth out.
-This is work in progress and experimental
-The code is mostly cross-platform, however I am currently working on OSX, so don't expect this code to compile in other platforms. Mainly because of coreaudio and very few platform dependant classes.
+# motivation
+Learning and playing with meta programming. Experimenting with compile time graphs.
 
-Following an example for creating an fm oscillator where all controls are smoothed:
+# supported platforms
+Although the code is mostly platform independant, this project as is will only build successfully on darwin.
+
+# example code
+Following an example for creating an fm oscillator where all controls are smoothed.  Please take a look at src/examples/crtp_synth for a more complex example.
 
 ```cpp
 using namespace dap;
