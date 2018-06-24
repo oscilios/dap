@@ -27,7 +27,7 @@ using osc_t =
                                                                      "samplerate"_s,
                                                                      "shape"_s));
 
-// oscillator where all gain, frequency and phase are smoothed controls
+// oscillator where gain, frequency and phase are smoothed controls
 using control_osc_t = osc_t<control_t, control_t, control_t>;
 // modulated control: the result of adding a control with an oscillator
 using mod_control_t = decltype(control_osc_t{} + control_t{});
@@ -45,7 +45,7 @@ osc.input("frequency"_s).input("x"_s).input("value"_s) = 440.0f;
 
 // modulation
 auto& modulator = osc.input("frequency"_s).input("y"_s);
-modulator.input("gain"_s).input("value"_s) = 1.0f;
+modulator.input("gain"_s).input("value"_s) = 50.0f;
 modulator.input("frequency"_s).input("value"_s) = 110.0f;
 modulator.input("phase"_s).input("value"_s) = 0.0f;
 modulator.input("sampleRate"_s) = 48000.0f;
