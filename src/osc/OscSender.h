@@ -4,9 +4,7 @@
 #include "oscpack/ip/IpEndpointName.h"
 #include "oscpack/ip/UdpSocket.h"
 #include "oscpack/osc/OscOutboundPacketStream.h"
-#include <atomic>
 #include <string>
-#include <memory>
 
 namespace dap
 {
