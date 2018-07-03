@@ -29,7 +29,7 @@ bool AudioProcess::process()
     }
     return true;
 }
-void AudioProcess::setInputs(float const* const* const inputs)
+void AudioProcess::setInputs(float const* const* const)
 {
 }
 void AudioProcess::setOutputs(float** outputs)

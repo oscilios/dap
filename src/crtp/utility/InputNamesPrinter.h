@@ -39,7 +39,7 @@ public:
         printInputNames(node.inputNames(), Indices{});
     }
     template <typename T>
-    void visit(ValueNode<T>& node)
+    void visit(ValueNode<T>& )
     {
         std::cout << "ValueNode" << std::endl;
     }
