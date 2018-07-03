@@ -1,6 +1,6 @@
-cmake_minimum_required (VERSION 2.8)
-
-project (dap)
+cmake_minimum_required (VERSION 3.7.1)
+cmake_policy (SET CMP0048 NEW)
+project (dap VERSION 0.1.0 LANGUAGES "CXX")
 include (CTest)
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
@@ -30,8 +30,6 @@ if (APPLE)
     set (CMAKE_C_FLAGS   ${CMAKE_C_FLAGS}   "-arch ${target_arch}")
     set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-arch ${target_arch}")
     set (CMAKE_LD_FLAGS  ${CMAKE_LD_FLAGS}  "-arch ${target_arch}")
-    add_definitions (-D__MACOSX_CORE__) # for RtMidi
-    #set (CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
     set (CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++1z")
     set (CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 endif ()
@@ -39,35 +37,27 @@ endif ()
 #########################################################
 # c++ 1x flags
 #########################################################
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if (${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     #add_compile_options (-fcolor-diagnostics) # force colored output
-    set (CXX11FLAGS "-std=c++1z -stdlib=libc++")
+    add_compile_options (-std=c++1z)
+    add_compile_options (-stdlib=libc++)
+    add_compile_options (-Wall -Wextra -pedantic  -Wnon-virtual-dtor -Weffc++ -Wno-unused-parameter)
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
+    add_compile_options (-std=c++17)
+    add_compile_options (-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-long-long -Wno-deprecated-declarations)
 endif ()
-
-if (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-    set (CXX11FLAGS -std=c++17)
-endif ()
-
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11FLAGS}")
 
 #########################################################
-# compiler flags
+# optimization flags
 #########################################################
-if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
-    #add_compile_options (-msse -msse2 -msse3 -mfpmath=sse -Wall -Wextra -Weffc++ -pedantic -Wno-unused-parameter -Wno-long-long)
-    add_compile_options (-msse -msse2 -msse3 -mfpmath=sse -Wall -Wextra -pedantic -Wno-unused-parameter -Wno-long-long -Wno-deprecated-declarations)
-endif ()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_compile_options (-Wall -Wextra -Wnon-virtual-dtor -Weffc++ -pedantic -Wno-unused-parameter)
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        message ("Build Type: " ${CMAKE_BUILD_TYPE})
-        add_compile_options (-O3 -msse3 -msse4.1 -mfpmath=sse)
-    else ()
-        message ("Build Type: " ${CMAKE_BUILD_TYPE})
-        #add_compile_options (-fsanitize=address)
-        add_definitions (-DDAP_DEBUG)
-    endif ()
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    message ("Build Type: " ${CMAKE_BUILD_TYPE})
+    add_compile_options (-O3 -msse3 -msse4.1 -mfpmath=sse)
+else ()
+    message ("Build Type: " ${CMAKE_BUILD_TYPE})
+    #add_compile_options (-fsanitize=address)
+    add_definitions (-DDAP_DEBUG)
 endif ()
 
 if (APPLE)
