@@ -41,7 +41,7 @@ if (${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     #add_compile_options (-fcolor-diagnostics) # force colored output
     add_compile_options (-std=c++1z)
     add_compile_options (-stdlib=libc++)
-    add_compile_options (-Wall -Wextra -pedantic  -Wnon-virtual-dtor -Weffc++)
+    add_compile_options (-Wall -Wextra -pedantic -Wnon-virtual-dtor -Weffc++)
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
     add_compile_options (-std=c++17)
     add_compile_options (-Wall -Wextra -pedantic -Wno-long-long -Wno-deprecated-declarations)
