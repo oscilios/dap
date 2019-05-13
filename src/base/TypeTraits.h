@@ -3,15 +3,15 @@
 
 // Collection of compile time utilities
 
-#include <type_traits>
-#include <typeindex>
+#include <array>
 #include <complex>
-#include <vector>
-#include <tuple>
+#include <iostream>
 #include <limits>
 #include <string>
-#include <array>
-#include <iostream>
+#include <tuple>
+#include <type_traits>
+#include <typeindex>
+#include <vector>
 
 #define DAP_REQUIRES_T(...) typename std::enable_if<(__VA_ARGS__), int>::type
 #define DAP_REQUIRES(...) DAP_REQUIRES_T(__VA_ARGS__) = 0
@@ -33,10 +33,10 @@ namespace dap
     }
 
     template <bool B, class T = void>
-    using enable_if_t         = typename std::enable_if<B, T>::type;
+    using enable_if_t = typename std::enable_if<B, T>::type;
 
     template <class T = void>
-    using value_type  = typename T::value_type;
+    using value_type = typename T::value_type;
 
     template <typename... Args>
     using common_type_t = typename std::common_type<Args...>::type;
@@ -61,7 +61,7 @@ namespace dap
         return (... || args);
     }
     template <class T, std::size_t size>
-    constexpr size_t array_size(T(&/*unused*/)[size])
+    constexpr size_t array_size(T (&/*unused*/)[size])
     {
         return size;
     }
@@ -193,8 +193,8 @@ namespace dap
     template <class T>
     constexpr T power(const T& x, int N)
     {
-        return N > 1 ? x * power(x, (N - 1) * (N > 1)) : N < 0 ? T(1) / power(x, (-N) * (N < 0)) :
-                                                                 N == 1 ? x : T(1);
+        return N > 1 ? x * power(x, (N - 1) * (N > 1))
+                     : N < 0 ? T(1) / power(x, (-N) * (N < 0)) : N == 1 ? x : T(1);
     }
 
     // sequence generation
@@ -247,7 +247,7 @@ namespace dap
         constexpr std::array<T, sizeof...(Is)>
         linspace_impl(T Start, T End, detail::sequence<Is...> /*unused*/)
         {
-            return {{T{T{Start} + T{End - Start} * T{Is} / T{sizeof...(Is)-1}}...}};
+            return {{T{T{Start} + T{End - Start} * T{Is} / T{sizeof...(Is) - 1}}...}};
         }
     } // detail
 
@@ -297,21 +297,20 @@ namespace dap
     constexpr decltype(auto) apply(F&& f, std::tuple<Ts...>&& t)
     {
         using Tuple = std::tuple<Ts...>;
-        using size = std::tuple_size<std::remove_reference_t<Tuple>>;
+        using size  = std::tuple_size<std::remove_reference_t<Tuple>>;
         return detail::apply_impl(
             std::forward<F>(f), std::forward<Tuple>(t), std::make_index_sequence<size::value>{});
     }
 
     // tuple for_each
     template <std::size_t I = 0, typename Fn, typename... Tp>
-    inline typename std::enable_if<I == sizeof...(Tp), void>::type
-    for_each(std::tuple<Tp...>&, Fn)
+    inline typename std::enable_if<I == sizeof...(Tp), void>::type for_each(std::tuple<Tp...>&, Fn)
     {
     }
 
     template <std::size_t I = 0, typename Fn, typename... Tp>
-    inline typename std::enable_if < I<sizeof...(Tp), void>::type
-    for_each(std::tuple<Tp...>& t, Fn f)
+        inline typename std::enable_if < I<sizeof...(Tp), void>::type
+                                         for_each(std::tuple<Tp...>& t, Fn f)
     {
         f(std::get<I>(t));
         for_each<I + 1, Fn, Tp...>(t, f);
@@ -325,8 +324,8 @@ namespace dap
     }
 
     template <std::size_t I = 0, typename Fn, typename... Tp>
-    inline typename std::enable_if < I<sizeof...(Tp), void>::type
-    for_each(const std::tuple<Tp...>& t, Fn f)
+        inline typename std::enable_if < I<sizeof...(Tp), void>::type
+                                         for_each(const std::tuple<Tp...>& t, Fn f)
     {
         f(std::get<I>(t));
         for_each<I + 1, Fn, Tp...>(t, f);
@@ -342,7 +341,7 @@ namespace dap
     {
         using type = std::tuple<Ts...>;
     };
-    template <typename...Ts>
+    template <typename... Ts>
     constexpr auto removeFirst(std::tuple<Ts...>)
     {
         return typename RemoveFirst<std::tuple<Ts...>>::type{};
@@ -351,15 +350,15 @@ namespace dap
     template <size_t N, typename Tuple>
     using tuple_element_t = typename std::tuple_element<N, Tuple>::type;
 
-    template <typename...Ts>
+    template <typename... Ts>
     struct IsTuple : std::false_type
     {
     };
-    template <typename...Ts>
+    template <typename... Ts>
     struct IsTuple<std::tuple<Ts...>> : std::true_type
     {
     };
-    template<typename T>
+    template <typename T>
     constexpr bool isTuple(T)
     {
         return IsTuple<T>::value;
@@ -370,7 +369,7 @@ namespace dap
     {
         return std::tuple_size<std::tuple<Ts...>>::value;
     }
-    template <size_t size, typename...Ts>
+    template <size_t size, typename... Ts>
     constexpr bool tupleSizeIs(std::tuple<Ts...>)
     {
         return std::tuple_size<std::tuple<Ts...>>::value == size;
@@ -417,7 +416,7 @@ namespace dap
     template <typename T, typename... Ts>
     constexpr bool tupleContainsType(T, std::tuple<Ts...>)
     {
-        return tuple_contains_type_t<T,std::tuple<Ts...>>{};
+        return tuple_contains_type_t<T, std::tuple<Ts...>>{};
     }
 
     // compile time string

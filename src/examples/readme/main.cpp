@@ -1,16 +1,3 @@
-# dap
-digital algorithm processing library
-
-# motivation
-Learning and playing with meta programming. Experimenting with compile time graphs.
-
-# supported platforms
-Although the code is mostly platform independant, this project as is will only build successfully on darwin.
-
-# example code
-Following an example for creating an fm oscillator where all controls are smoothed.  Please take a look at src/examples/crtp_synth for a more complex example.
-
-```cpp
 #include "crtp/nodes/Processor.h"
 #include "dsp/Oscillator.h"
 #include "dsp/Smoother.h"
@@ -77,4 +64,3 @@ int main()
 
     return 0;
 }
-```
