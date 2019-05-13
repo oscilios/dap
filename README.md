@@ -16,14 +16,14 @@ using samplerate_t = float;
 
 // a smoothed control
 using control_t = decltype(
-    make_node::processor<dsp::FixedSmoother<float, 512>>::
+    processor<dsp::FixedSmoother<float, 512>>::
         with_inputs<float>::named("value"_s));
 
 using shape_t = dsp::OscillatorFunctions::Shape;
 
 template <typename Amp, typename Freq, typename Ph>
 using osc_t =
-    decltype(make_node::processor<dsp::Oscillator<float>>::
+    decltype(processor<dsp::Oscillator<float>>::
         with_inputs<Amp, Freq, Ph, samplerate_t, shape_t>::named("gain"_s,
                                                                  "frequency"_s,
                                                                  "phase"_s,

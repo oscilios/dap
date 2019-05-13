@@ -83,8 +83,8 @@ public:
     {
         using std::make_tuple;
 
-        auto& filter    = m_graph.input<0>();
-        auto& mixer     = filter.input<0>();
+        auto& filter = m_graph.input<0>();
+        auto& mixer  = filter.input<0>();
 
         // left branch
         auto& osc5 = mixer.input<0>().input("signal"_s);

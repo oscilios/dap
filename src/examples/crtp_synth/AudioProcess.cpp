@@ -9,7 +9,8 @@ AudioProcess::AudioProcess(int32_t outputId,
                            size_t outputChannelCount,
                            size_t bufferSize,
                            float sampleRate)
-: m_outputBus(AudioBusFactory::create(dap::audioio::Scope::Output, outputId, bufferSize, sampleRate))
+: m_outputBus(
+      AudioBusFactory::create(dap::audioio::Scope::Output, outputId, bufferSize, sampleRate))
 , m_outputChannelCount(outputChannelCount)
 , m_synth(bufferSize, sampleRate)
 {

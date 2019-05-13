@@ -329,13 +329,13 @@ class dap::crtp::ProcessorNode
 
 public:
     ProcessorNode() = default;
-    template <typename...Ts>
-    ProcessorNode(const Ts&...inputs)
+    template <typename... Ts>
+    ProcessorNode(const Ts&... inputs)
     {
         base_type::m_inputs = std::forward_as_tuple(inputs...);
     }
-    template <typename...Ts>
-    ProcessorNode(Ts&&...inputs)
+    template <typename... Ts>
+    ProcessorNode(Ts&&... inputs)
     {
         base_type::m_inputs = std::forward_as_tuple(inputs...);
     }
@@ -418,7 +418,8 @@ class dap::crtp::SplitNode
     {
         using dests_t      = std::tuple<TInputNamesTuples...>;
         using sink_names_t = decltype(SplitNode<TInputs, TInputNamesTuples...>::branchNames());
-        static constexpr auto targets = detail::targetTransform<detail::targetcat, sink_names_t, dests_t>{};
+        static constexpr auto targets =
+            detail::targetTransform<detail::targetcat, sink_names_t, dests_t>{};
 
         for_each(targets, [&](auto& target) {
             for_each(target.inputNames(), [&](auto name) {
@@ -443,7 +444,7 @@ public:
 
 // joins SplitNodes and applies Op to each branch
 template <typename TInputs, typename Op>
-class dap::crtp::JoinNode: public NodeExpression<JoinNode<TInputs, Op>, TInputs>
+class dap::crtp::JoinNode : public NodeExpression<JoinNode<TInputs, Op>, TInputs>
 {
     using base_type = NodeExpression<JoinNode<TInputs, Op>, TInputs>;
     Op m_op;

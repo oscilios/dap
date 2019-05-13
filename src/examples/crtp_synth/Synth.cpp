@@ -49,8 +49,8 @@ Synth::Synth(size_t bufferSize, scalar_t samplerate)
     This["/synth/set/phaser/wet/value"_s]       = 0.9f;
 
     // noise
-    This["/synth/set/noise/gain/value"_s]          = 1.0f;
-    This["/synth/set/noise/color"_s]               = noise_gen_t::Color::Pink;
+    This["/synth/set/noise/gain/value"_s] = 1.0f;
+    This["/synth/set/noise/color"_s]      = noise_gen_t::Color::Pink;
     // osc5
     This["/synth/set/osc5/frequency/value"_s]      = 440.0f;
     This["/synth/set/osc5/frequency/portamento"_s] = bufferSize;
@@ -62,21 +62,21 @@ Synth::Synth(size_t bufferSize, scalar_t samplerate)
     This["/synth/set/osc6/gain/value"_s]           = 0.5f;
     This["/synth/set/osc6/phase/value"_s]          = 0.0f;
     // osc1
-    This["/synth/set/osc1/frequency/value"_s]      = 4.0f;
-    This["/synth/set/osc1/gain/value"_s]           = 1.0f;
-    This["/synth/set/osc1/phase/value"_s]          = 0.0f;
+    This["/synth/set/osc1/frequency/value"_s] = 4.0f;
+    This["/synth/set/osc1/gain/value"_s]      = 1.0f;
+    This["/synth/set/osc1/phase/value"_s]     = 0.0f;
     // osc2
-    This["/synth/set/osc2/frequency/value"_s]      = 220.0f; //196.0f;
-    This["/synth/set/osc2/gain/value"_s]           = 500.0f;
-    This["/synth/set/osc2/phase/value"_s]          = 0.0f;
+    This["/synth/set/osc2/frequency/value"_s] = 220.0f; // 196.0f;
+    This["/synth/set/osc2/gain/value"_s]      = 500.0f;
+    This["/synth/set/osc2/phase/value"_s]     = 0.0f;
     // osc3
-    This["/synth/set/osc3/frequency/value"_s]      = 55.0f;
-    This["/synth/set/osc3/gain/value"_s]           = 1.0f;
-    This["/synth/set/osc3/phase/value"_s]          = M_PI/2.0f;
+    This["/synth/set/osc3/frequency/value"_s] = 55.0f;
+    This["/synth/set/osc3/gain/value"_s]      = 1.0f;
+    This["/synth/set/osc3/phase/value"_s]     = M_PI / 2.0f;
     // osc4
-    This["/synth/set/osc4/frequency/value"_s]      = 220.0f; //261.63f;
-    This["/synth/set/osc4/gain/value"_s]           = 150.0f;
-    This["/synth/set/osc4/phase/value"_s]          = M_PI/4.0f;
+    This["/synth/set/osc4/frequency/value"_s] = 220.0f; // 261.63f;
+    This["/synth/set/osc4/gain/value"_s]      = 150.0f;
+    This["/synth/set/osc4/phase/value"_s]     = M_PI / 4.0f;
 
     This["/synth/set/osc5/shape"_s] = osc_shape_t::Sine;
     This["/synth/set/osc6/shape"_s] = osc_shape_t::Sine;
@@ -86,7 +86,8 @@ Synth::Synth(size_t bufferSize, scalar_t samplerate)
     This["/synth/set/osc4/shape"_s] = osc_shape_t::Sine;
 
     setSamplerate(samplerate);
-    //dap::crtp::NodeVisitor<dap::crtp::InputNamesPrinter>()(m_graph); // TODO: seems broken for mixer processor
+    // dap::crtp::NodeVisitor<dap::crtp::InputNamesPrinter>()(m_graph); // TODO: seems broken for
+    // mixer processor
 }
 void Synth::setSamplerate(scalar_t samplerate)
 {

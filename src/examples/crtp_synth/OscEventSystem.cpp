@@ -16,8 +16,10 @@ namespace
 
 #define SYNTH_CALLBACK(name, type) \
     m_oscReceiver.addCallback(#name, [&p](any_vector&& v) { p[#name##_s] = first<type>(v); })
-#define SYNTH_LAMBDA_CALLBACK(name, type, lambda) \
-    m_oscReceiver.addCallback(#name, [&p, &lambda](any_vector&& v) { p[#name##_s] = lambda(first<type>(v)); })
+#define SYNTH_LAMBDA_CALLBACK(name, type, lambda)                    \
+    m_oscReceiver.addCallback(#name, [&p, &lambda](any_vector&& v) { \
+        p[#name##_s] = lambda(first<type>(v));                       \
+    })
 
 OscEventSystem::OscEventSystem(AudioProcess& p)
 {
