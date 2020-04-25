@@ -78,10 +78,10 @@ ExternalProject_Add(oscpack
 ################################################################################
 # eigen
 ################################################################################
-set (EIGEN_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/eigen-eigen-07105f7124f9)
-set (EIGEN_SOURCE_DIR ${THIRDPARTY_DOWNLOAD_DIR}/eigen-eigen-07105f7124f9)
+set (EIGEN_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/eigen)
+set (EIGEN_SOURCE_DIR ${THIRDPARTY_DOWNLOAD_DIR}/eigen)
 ExternalProject_Add(eigen
-                    URL         http://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2
+                    URL         https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
                     PREFIX      ${EIGEN_BINARY_DIR}
                     SOURCE_DIR  ${EIGEN_SOURCE_DIR}
                     INSTALL_DIR ${THIRDPARTY_INSTALL_DIR}

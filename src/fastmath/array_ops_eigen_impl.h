@@ -17,7 +17,7 @@ namespace dap
         using CwiseBinaryOp = Eigen::CwiseBinaryOp<Op, Lhs, Rhs>;
 
         template <typename Lhs, typename Rhs, int NestingFlags>
-        using CoeffBasedProduct = Eigen::CoeffBasedProduct<Lhs, Rhs, NestingFlags>;
+        using CoeffBasedProduct = Eigen::Product<Lhs, Rhs, NestingFlags>;
 
         namespace array
         {

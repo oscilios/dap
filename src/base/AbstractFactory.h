@@ -88,7 +88,7 @@ private:
         return args;
     }
 
-    static bool register_(const char* name, AbstractFactory::FactoryMethod createMethod) noexcept
+    static bool register_(const char* name, AbstractFactory::FactoryMethod createMethod)
     {
         auto p = AbstractFactory::getRegistry().insert(std::make_pair(name, createMethod));
         if (p.second)

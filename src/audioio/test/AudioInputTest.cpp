@@ -6,20 +6,6 @@ using namespace testing;
 using namespace dap;
 using namespace dap::audioio;
 
-static bool startsWith(const std::string& line, const std::string& preffix)
-{
-    return line.find_first_of(preffix, 0) == 0;
-}
-
-static const char* defaultDevicePrefix()
-{
-#ifdef __APPLE__
-    return "Built-in";
-#else
-    return "Unknown default device prefix.";
-#endif
-}
-
 class AudioInputTest : public Test
 {
 };
@@ -28,14 +14,7 @@ DAP_TEST_F(AudioInputTest, test_start_stop)
 {
     auto inputDevices = AudioDeviceList::create(Scope::Input);
     DAP_ASSERT_GE(inputDevices.size(), 1u);
-    IAudioDevice* inputDevice = nullptr;
-    for (const auto& dev : inputDevices)
-    {
-        if (startsWith(dev->getName(), defaultDevicePrefix()))
-        {
-            inputDevice = dev.get();
-        }
-    }
+    IAudioDevice* inputDevice = inputDevices[0].get();
     DAP_ASSERT_TRUE(inputDevice != nullptr);
     auto bufferSize = inputDevice->getBufferSize();
     auto sampleRate = inputDevice->getSampleRate();

@@ -1,5 +1,5 @@
 #include "dsp/IIRFilter.h"
-#include "fastmath/var.h"
+#include "fastmath/Var.h"
 #include "dap_gtest.h"
 
 using namespace testing;

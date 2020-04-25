@@ -6,23 +6,11 @@
 
 using namespace dap::audioio;
 
-static bool startsWith(const std::string& line, const std::string& preffix)
-{
-    return line.find_first_of(preffix, 0) == 0;
-}
-
 auto getOutputDeviceProperties()
 {
     auto outputDevices = AudioDeviceList::create(dap::audioio::Scope::Output);
     assert(outputDevices.size() > 0u);
-    IAudioDevice* outputDevice = nullptr;
-    for (const auto& dev : outputDevices)
-    {
-        if (startsWith(dev->getName(), "Built-in"))
-        {
-            outputDevice = dev.get();
-        }
-    }
+    IAudioDevice* outputDevice = outputDevices[0].get();
     assert(outputDevice != nullptr);
 
     return std::make_tuple(outputDevice->getId(),

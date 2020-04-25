@@ -324,7 +324,7 @@ class dap::crtp::ProcessorNode
     template <size_t... Is>
     inline auto callProcessor(const std::index_sequence<Is...>&)
     {
-        return m_processor(dispatch(std::get<Is>(base_type::template m_inputs))...);
+        return m_processor(dispatch(std::get<Is>(base_type::m_inputs))...);
     }
 
 public:
@@ -346,7 +346,7 @@ public:
     auto operator()()
     {
         static constexpr auto indices =
-            std::make_index_sequence<base_type::template inputCount()>{};
+            std::make_index_sequence<base_type::inputCount()>{};
         return callProcessor(indices);
     }
 };
@@ -423,11 +423,11 @@ class dap::crtp::SplitNode
 
         for_each(targets, [&](auto& target) {
             for_each(target.inputNames(), [&](auto name) {
-                base_type::template input(target.sinkName()).input(name) = value;
+                base_type::input(target.sinkName()).input(name) = value;
             });
         });
 
-        return std::make_tuple(dispatch(std::get<1 + Is>(base_type::template m_inputs))...);
+        return std::make_tuple(dispatch(std::get<1 + Is>(base_type::m_inputs))...);
     }
 
 public:
@@ -462,7 +462,7 @@ class dap::crtp::JoinNode : public NodeExpression<JoinNode<TInputs, Op>, TInputs
     template <size_t... Is>
     inline auto join(const std::index_sequence<Is...>&)
     {
-        return join(dispatch(std::get<Is>(base_type::template m_inputs))...);
+        return join(dispatch(std::get<Is>(base_type::m_inputs))...);
     }
     static constexpr auto indices()
     {
