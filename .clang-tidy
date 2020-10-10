@@ -1,5 +1,5 @@
 ---
-Checks:          '*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,-google-build-using-namespace,-llvm-header-guard,-llvm-include-order,-google-readability-namespace-comments,-google-runtime-references*,-llvm-namespace-comment,-google-explicit-constructor'
+Checks:          '*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,-cppcoreguidelines-owning-memory,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-magic-numbers,-google-build-using-namespace,-google-readability-namespace-comments,-google-runtime-references*,-google-explicit-constructor,-llvm-namespace-comment,-llvm-header-guard,-llvm-include-orderi,-modernize-use-trailing-return-type,-fuchsia-overloaded-operator,-fuchsia-default-arguments-declarations,-readability-magic-numbers,-fuchsia-default-arguments-calls,-hicpp-uppercase-literal-suffix,-readability-uppercase-literal-suffix'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
@@ -19,15 +19,15 @@ CheckOptions:
     value:           '0'
   - key:             cppcoreguidelines-pro-type-member-init.IgnoreArrays
     value:           '0'
-  - key:             dolby-modernize-pass-by-value.IncludeStyle
+  - key:             modernize-pass-by-value.IncludeStyle
     value:           llvm
-  - key:             dolby-readability-braces-around-statements.ShortStatementLines
+  - key:             readability-braces-around-statements.ShortStatementLines
     value:           '1'
-  - key:             dolby-readability-function-size.StatementThreshold
+  - key:             readability-function-size.StatementThreshold
     value:           '800'
-  - key:             dolby-readability-namespace-comments.ShortNamespaceLines
+  - key:             readability-namespace-comments.ShortNamespaceLines
     value:           '10'
-  - key:             dolby-readability-namespace-comments.SpacesBeforeComments
+  - key:             readability-namespace-comments.SpacesBeforeComments
     value:           '2'
   - key:             google-build-namespaces.HeaderFileExtensions
     value:           h,hh,hpp,hxx

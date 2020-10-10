@@ -1,13 +1,9 @@
 #include "crtp/nodes/Node.h"
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 
 using namespace testing;
 using namespace dap;
 using namespace dap::crtp;
-
-class ProcessorNodeTest : public Test
-{
-};
 
 class ProdProcessor
 {
@@ -28,7 +24,7 @@ public:
     }
 };
 
-DAP_TEST_F(ProcessorNodeTest, non_templated_processor)
+TEST(ProcessorNodeTest, non_templated_processor)
 {
     // ProcessorNode<ProdProcessor, Node::Inputs<float, float>, decltype(Node::make_params("lhs"_s,
     // "rhs"_s))>
@@ -37,13 +33,13 @@ DAP_TEST_F(ProcessorNodeTest, non_templated_processor)
 
     prod.input("lhs"_s) = 2.0f;
     prod.input("rhs"_s) = 3.0f;
-    DAP_ASSERT_EQ(6.0f, prod);
+    ASSERT_EQ(6.0f, prod);
 }
-DAP_TEST_F(ProcessorNodeTest, templated_processor)
+TEST(ProcessorNodeTest, templated_processor)
 {
     auto prod = make_processor_node(TProdProcessor<float>{}, Node::Inputs<float, float>{}, "lhs"_s, "rhs"_s);
 
     prod.input("lhs"_s) = 2.0f;
     prod.input("rhs"_s) = 3.0f;
-    DAP_ASSERT_EQ(6.0f, prod);
+    ASSERT_EQ(6.0f, prod);
 }

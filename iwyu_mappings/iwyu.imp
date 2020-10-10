@@ -1,9 +1,0 @@
-# Default include mappings for IWYU with GCC
-[
-  { ref: boost-all-private.imp },
-  { ref: boost-all.imp },
-  { ref: qt5_4.imp },
-  { ref: stl_c_headers.imp },
-  { ref: gtest.imp },
-  { ref: libcxx.imp },
-]

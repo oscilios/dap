@@ -1,9 +1,9 @@
-#include "dsp/Mixer.h"
+#include "dsp/CombFilter.h"
 #include "dsp/DelayLine.h"
 #include "dsp/FeedbackLine.h"
-#include "dsp/CombFilter.h"
+#include "dsp/Mixer.h"
 #include "fastmath/Var.h"
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 
 #include <vector>
 
@@ -11,25 +11,23 @@ using namespace testing;
 using namespace dap;
 using namespace dap::dsp;
 
-class VarTest : public Test
-{
-};
-
-DAP_TEST_F(VarTest, mixer)
+TEST(VarTest, mixer)
 {
     Mixer mixer;
     Mixer::Bus bus;
-    DAP_ASSERT_FLOAT_EQ(300.0f / std::sqrt(4.0f),
-                        mixer(bus(ivar(1), ivar(10)), bus(fvar(2), fvar(10)*ivar(2)), bus(3, 30), bus(4, 40)));
+    ASSERT_FLOAT_EQ(
+        300.0f / std::sqrt(4.0f),
+        mixer(bus(ivar(1), ivar(10)), bus(fvar(2), fvar(10) * ivar(2)), bus(3, 30), bus(4, 40)));
 }
-DAP_TEST_F(VarTest, normalized_mixer)
+TEST(VarTest, normalized_mixer)
 {
     NormalizedMixer mixer;
     NormalizedMixer::Bus bus;
-    DAP_ASSERT_FLOAT_EQ(300.0f / std::sqrt(30.0f),
-                        mixer(bus(ivar(1), ivar(10)), bus(fvar(2), fvar(10)*ivar(2)), bus(3, 30), bus(4, 40)));
+    ASSERT_FLOAT_EQ(
+        300.0f / std::sqrt(30.0f),
+        mixer(bus(ivar(1), ivar(10)), bus(fvar(2), fvar(10) * ivar(2)), bus(3, 30), bus(4, 40)));
 }
-DAP_TEST_F(VarTest, delay_4samples)
+TEST(VarTest, delay_4samples)
 {
     DelayLine<fvar, 8> delay;
     std::array<float, 20> expected(
@@ -37,10 +35,10 @@ DAP_TEST_F(VarTest, delay_4samples)
     for (size_t i = 0; i < 20; i++)
     {
         auto input = fvar(i) * fvar(2.0);
-        DAP_ASSERT_FLOAT_EQ(expected[i], delay(input, 4));
+        ASSERT_FLOAT_EQ(expected[i], delay(input, 4));
     }
 }
-DAP_TEST_F(VarTest, 4d5samples)
+TEST(VarTest, 4d5samples)
 {
     DelayLine<fvar, 8> delay;
     std::array<float, 20> expected(
@@ -48,16 +46,16 @@ DAP_TEST_F(VarTest, 4d5samples)
     for (size_t i = 0; i < 20; i++)
     {
         auto input = fvar(i) * fvar(2.0);
-        DAP_ASSERT_FLOAT_EQ(expected[i], delay(input, 4.5f));
+        ASSERT_FLOAT_EQ(expected[i], delay(input, 4.5f));
     }
 }
-DAP_TEST_F(VarTest, 4samplesWithFeedback)
+TEST(VarTest, 4samplesWithFeedback)
 {
-    const float g = 0.5;
-    const float g2 = g*g;
-    const float k = std::sqrt(1.0f + g2);
-    const float k2 = k*k;
-    const float k3 = k*k*k;
+    const float g  = 0.5;
+    const float g2 = g * g;
+    const float k  = std::sqrt(1.0f + g2);
+    const float k2 = k * k;
+    const float k3 = k * k * k;
     FeedbackLine<fvar, 8> delay;
     std::array<float, 20> expected({{0,
                                      0,
@@ -81,24 +79,24 @@ DAP_TEST_F(VarTest, 4samplesWithFeedback)
                                      15.0f / k + g * 10.0f / k2 + g2 * 5.0f / k3}});
     for (size_t i = 0; i < 20; i++)
     {
-        DAP_ASSERT_FLOAT_EQ(expected[i], delay(ivar(i), fvar(4.0f), fvar(1.0)/fvar(2.0)));
+        ASSERT_FLOAT_EQ(expected[i], delay(ivar(i), fvar(4.0f), fvar(1.0) / fvar(2.0)));
     }
 }
 
-DAP_TEST_F(VarTest, FeedbackCombFilter)
+TEST(VarTest, FeedbackCombFilter)
 {
-  FeedbackCombFilter<float, 16> fcomb;
-  FeedbackCombFilter<fvar, 16> vcomb;
-  for (size_t i = 0; i < 32; i++)
-      DAP_ASSERT_FLOAT_EQ(fcomb(i / 32.0f, 4, 0.5f),
-                          vcomb(fvar(i) / fvar(32), ivar(2) * ivar(2), fvar(1) / fvar(2)));
+    FeedbackCombFilter<float, 16> fcomb;
+    FeedbackCombFilter<fvar, 16> vcomb;
+    for (size_t i = 0; i < 32; i++)
+        ASSERT_FLOAT_EQ(fcomb(i / 32.0f, 4, 0.5f),
+                        vcomb(fvar(i) / fvar(32), ivar(2) * ivar(2), fvar(1) / fvar(2)));
 }
 
-DAP_TEST_F(VarTest, FeedforwardCombFilter)
+TEST(VarTest, FeedforwardCombFilter)
 {
-  FeedforwardCombFilter<float, 16> fcomb;
-  FeedforwardCombFilter<fvar, 16> vcomb;
-  for (size_t i = 0; i < 32; i++)
-      DAP_ASSERT_FLOAT_EQ(fcomb(i / 32.0f, 4, 0.5f),
-                          vcomb(fvar(i) / fvar(32), ivar(2) * ivar(2), fvar(1) / fvar(2)));
+    FeedforwardCombFilter<float, 16> fcomb;
+    FeedforwardCombFilter<fvar, 16> vcomb;
+    for (size_t i = 0; i < 32; i++)
+        ASSERT_FLOAT_EQ(fcomb(i / 32.0f, 4, 0.5f),
+                        vcomb(fvar(i) / fvar(32), ivar(2) * ivar(2), fvar(1) / fvar(2)));
 }

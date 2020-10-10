@@ -1,4 +1,4 @@
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 #include <vector>
 #include <iostream>
 #include <limits>
@@ -10,10 +10,6 @@
 using namespace testing;
 using namespace dap;
 using namespace dap::fastmath;
-
-class VariableTest : public Test
-{
-};
 
 template <typename T>
 auto compute_bench(const T& x, const T& y)
@@ -35,22 +31,22 @@ void eval_expr(const SrcContainer& src, DestContainer& dest, Func&& func)
     }
 }
 
-DAP_TEST_F(VariableTest, simple)
+TEST(VariableTest, simple)
 {
     var n = 42;
-    DAP_ASSERT_EQ(42, int(n));
+    ASSERT_EQ(42, int(n));
 
     n = 43;
-    DAP_ASSERT_EQ(43, n);
+    ASSERT_EQ(43, n);
 
     n = 4.2f;
-    DAP_ASSERT_FLOAT_EQ(4.2f, n);
+    ASSERT_FLOAT_EQ(4.2f, n);
 
     int m = 44;
     n = m;
-    DAP_ASSERT_EQ(m, n);
-    DAP_ASSERT_EQ(44, n);
-    DAP_ASSERT_EQ(44, static_cast<int>(n));
+    ASSERT_EQ(m, n);
+    ASSERT_EQ(44, n);
+    ASSERT_EQ(44, static_cast<int>(n));
 
     // operator =
 
@@ -58,49 +54,49 @@ DAP_TEST_F(VariableTest, simple)
 
     // copy assignment operator
     n = n2;
-    DAP_ASSERT_EQ(55, n);
+    ASSERT_EQ(55, n);
 
     // plus operator
     n = n + var(1);
-    DAP_ASSERT_EQ(56, n);
+    ASSERT_EQ(56, n);
 
     n = n + var(1.5);
-    DAP_ASSERT_FLOAT_EQ(57.5f, n);
+    ASSERT_FLOAT_EQ(57.5f, n);
 
     // assign to a float
     const float foo = n;
-    DAP_ASSERT_FLOAT_EQ(57.5f, foo);
+    ASSERT_FLOAT_EQ(57.5f, foo);
 
     // overflow
     n       = std::numeric_limits<int>::max();
     float f = std::numeric_limits<int>::max();
     n = n + var(1);
-    DAP_ASSERT_EQ(f + 1.0f, n);
+    ASSERT_EQ(f + 1.0f, n);
 
     n = 3.0f;
     n2 = 200.0f;
-    DAP_ASSERT_EQ(0.015f, n/n2);
+    ASSERT_EQ(0.015f, n/n2);
 }
 
-DAP_TEST_F(VariableTest, literals_and_Variables_combined)
+TEST(VariableTest, literals_and_Variables_combined)
 {
     var n = 42;
     n = n + 1 + var(4) + 2 * n;
     std::cout << exprTypeStr(n + 1 + var(4) + 2 * n) << std::endl;
-    DAP_ASSERT_EQ(131, n);
+    ASSERT_EQ(131, n);
 }
 
-DAP_TEST_F(VariableTest, container)
+TEST(VariableTest, container)
 {
     std::vector<var> v({1, 2, 3, 4, 5});
     int i = 1;
     for (const auto& x : v)
     {
-        DAP_ASSERT_EQ(i++, int(x));
+        ASSERT_EQ(i++, int(x));
     }
 }
 
-DAP_TEST_F(VariableTest, expression)
+TEST(VariableTest, expression)
 {
     {
         var x = 2;
@@ -108,19 +104,19 @@ DAP_TEST_F(VariableTest, expression)
         var z = 5.0;
         var w = x * y + x / z - y / z;
         std::cout << exprTypeStr(x * y + x / z - y / z) << std::endl;
-        DAP_ASSERT_FLOAT_EQ(5.8f, w);
+        ASSERT_FLOAT_EQ(5.8f, w);
     }
 
     {
         var x;
         auto expr = x * x + x * x;
-        DAP_ASSERT_EQ(18, expr(3));
-        DAP_ASSERT_FLOAT_EQ(std::sin(18), sin(expr(3)));
+        ASSERT_EQ(18, expr(3));
+        ASSERT_FLOAT_EQ(std::sin(18), sin(expr(3)));
     }
 
 }
 
-DAP_TEST_F(VariableTest, containerFunctor)
+TEST(VariableTest, containerFunctor)
 {
     {
         std::vector<var> v({1, 2, 3, 4, 5});
@@ -132,7 +128,7 @@ DAP_TEST_F(VariableTest, containerFunctor)
         int i = 1;
         for (const auto& k : v)
         {
-            DAP_ASSERT_FLOAT_EQ(2 * i * i, int(k));
+            ASSERT_FLOAT_EQ(2 * i * i, int(k));
             ++i;
         }
     }
@@ -149,7 +145,7 @@ DAP_TEST_F(VariableTest, containerFunctor)
         int i = 1;
         for (const auto& k : v)
         {
-            DAP_ASSERT_FLOAT_EQ(std::sin(2 * i * i), k);
+            ASSERT_FLOAT_EQ(std::sin(2 * i * i), k);
             ++i;
         }
     }
@@ -162,7 +158,7 @@ struct MyOp
         return pow(x, y + x) + 5;
     }
 };
-DAP_TEST_F(VariableTest, isArithmetic)
+TEST(VariableTest, isArithmetic)
 {
     ASSERT_TRUE(fastmath::isArithmetic<var>());
     using MulOpFloat = BinaryExpression<MulOp, var, var>;
@@ -171,89 +167,89 @@ DAP_TEST_F(VariableTest, isArithmetic)
     ASSERT_TRUE(fastmath::isBaseExpression<MulOpFloat>());
     ASSERT_TRUE(fastmath::isBaseExpression<PowOpFloat>());
 }
-DAP_TEST_F(VariableTest, power)
+TEST(VariableTest, power)
 {
     var x = 3;
     var y = 2;
     var z = pow(x, y + x) + var(5);
-    DAP_ASSERT_FLOAT_EQ(248.0f, z);
+    ASSERT_FLOAT_EQ(248.0f, z);
     z = pow(x, y) + 5;
-    DAP_ASSERT_FLOAT_EQ(14.0f, z);
+    ASSERT_FLOAT_EQ(14.0f, z);
     z = 3 + pow(pow(x, y), 2);
-    DAP_ASSERT_FLOAT_EQ(84.0f, z);
+    ASSERT_FLOAT_EQ(84.0f, z);
 }
-DAP_TEST_F(VariableTest, exp)
+TEST(VariableTest, exp)
 {
     var x = 3;
     var y = 2;
     var z = exp(2 * x + y);
     std::cout << exprTypeStr(exp(2 * x + y)) << std::endl;
-    DAP_ASSERT_FLOAT_EQ(std::exp(8), z);
+    ASSERT_FLOAT_EQ(std::exp(8), z);
 }
-DAP_TEST_F(VariableTest, hypot)
+TEST(VariableTest, hypot)
 {
     var x = 3;
     var y = 2.5;
     var z = hypot(x, y);
     std::cout << exprTypeStr(hypot(x, y)) << std::endl;
-    DAP_ASSERT_FLOAT_EQ(3.905124837953327, z);
+    ASSERT_FLOAT_EQ(3.905124837953327, z);
 }
-DAP_TEST_F(VariableTest, compare)
+TEST(VariableTest, compare)
 {
     var x = 3;
     var y = 2.5;
 
-    DAP_ASSERT_TRUE(x > y);
-    DAP_ASSERT_FALSE(x < y);
+    ASSERT_TRUE(x > y);
+    ASSERT_FALSE(x < y);
 
-    DAP_ASSERT_TRUE(x * x >= y * y);
-    DAP_ASSERT_FALSE(x * x <= y * y);
+    ASSERT_TRUE(x * x >= y * y);
+    ASSERT_FALSE(x * x <= y * y);
 
-    DAP_ASSERT_TRUE(x * y == y * x);
-    DAP_ASSERT_TRUE(x * y + 1 != y * x);
+    ASSERT_TRUE(x * y == y * x);
+    ASSERT_TRUE(x * y + 1 != y * x);
 }
-DAP_TEST_F(VariableTest, maxmin)
+TEST(VariableTest, maxmin)
 {
     var x = 3;
     var y = 2.5;
 
-    DAP_ASSERT_FLOAT_EQ(3, max(x, y));
-    DAP_ASSERT_FLOAT_EQ(2.5, min(x, y));
+    ASSERT_FLOAT_EQ(3, max(x, y));
+    ASSERT_FLOAT_EQ(2.5, min(x, y));
 }
-DAP_TEST_F(VariableTest, plus_equal_operator)
+TEST(VariableTest, plus_equal_operator)
 {
     var x = 3;
     var y = 2.5;
     var z = 1.0;
 
     z += x * y;
-    DAP_ASSERT_FLOAT_EQ(8.5, z);
+    ASSERT_FLOAT_EQ(8.5, z);
 
     z += 1;
-    DAP_ASSERT_FLOAT_EQ(9.5, z);
+    ASSERT_FLOAT_EQ(9.5, z);
 
     z *= pow(x, 2);
-    DAP_ASSERT_FLOAT_EQ(85.5, z);
+    ASSERT_FLOAT_EQ(85.5, z);
 
     z -= 85;
-    DAP_ASSERT_FLOAT_EQ(0.5, z);
+    ASSERT_FLOAT_EQ(0.5, z);
 
     z /= 2 * y;
-    DAP_ASSERT_FLOAT_EQ(0.1, z);
+    ASSERT_FLOAT_EQ(0.1, z);
 }
-DAP_TEST_F(VariableTest, fastmath_array)
+TEST(VariableTest, fastmath_array)
 {
     var_array a({1, 2, 3, 4});
     auto f = a.vec().dot(a.vec());
-    DAP_ASSERT_FLOAT_EQ(30, f);
+    ASSERT_FLOAT_EQ(30, f);
 
     var_array v({5, 6});
     var_array res = a.mat<2, 2>() * v.vec();
-    DAP_ASSERT_FLOAT_EQ(23, res[0]);
-    DAP_ASSERT_FLOAT_EQ(34, res[1]);
+    ASSERT_FLOAT_EQ(23, res[0]);
+    ASSERT_FLOAT_EQ(34, res[1]);
 }
 #ifdef NDEBUG
-DAP_TEST_F(VariableTest, benchmark)
+TEST(VariableTest, benchmark)
 {
     // using normal arithmetic
     const float x1 = 3.0f;
@@ -297,12 +293,12 @@ DAP_TEST_F(VariableTest, benchmark)
     std::cout << "diff: " << diff1.count() << " " << diff2.count() << " "
               << diff1.count() / diff2.count() << std::endl;
 
-    DAP_ASSERT_LE(diff.count() / diff1.count(), 1.5);
+    ASSERT_LE(diff.count() / diff1.count(), 1.5);
 
-    DAP_ASSERT_FLOAT_EQ(std::log(50), z);
-    DAP_ASSERT_FLOAT_EQ(std::log(50), z1);
+    ASSERT_FLOAT_EQ(std::log(50), z);
+    ASSERT_FLOAT_EQ(std::log(50), z1);
 }
-DAP_TEST_F(VariableTest, benchmark_fastmath_array)
+TEST(VariableTest, benchmark_fastmath_array)
 {
     // int
     size_t size = 32;
@@ -364,12 +360,12 @@ DAP_TEST_F(VariableTest, benchmark_fastmath_array)
 
     std::cout << diff1.count() << " " << diff2.count() << " " << diff3.count() << " "
               << diff4.count() << std::endl;
-    DAP_ASSERT_FLOAT_EQ(1.0f, res2 / res1);
-    DAP_ASSERT_FLOAT_EQ(1.0f, res3 / res1);
-    DAP_ASSERT_FLOAT_EQ(1.0f, res4 / res1);
+    ASSERT_FLOAT_EQ(1.0f, res2 / res1);
+    ASSERT_FLOAT_EQ(1.0f, res3 / res1);
+    ASSERT_FLOAT_EQ(1.0f, res4 / res1);
 
-    DAP_ASSERT_LE(diff2.count() / diff1.count(), 1.5);
-    DAP_ASSERT_LE(diff2.count() / diff3.count(), 1.5);
-    DAP_ASSERT_GE(diff4.count() / diff2.count(), 2.5);
+    ASSERT_LE(diff2.count() / diff1.count(), 1.5);
+    ASSERT_LE(diff2.count() / diff3.count(), 1.5);
+    ASSERT_GE(diff4.count() / diff2.count(), 2.5);
 }
 #endif // NDEBUG

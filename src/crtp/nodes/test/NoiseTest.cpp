@@ -1,6 +1,6 @@
 #include "crtp/nodes/Node.h"
 #include "dap_audio_test.h"
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 #include "dsp/FeedbackLine.h"
 #include "dsp/NoiseGenerator.h"
 #include "dsp/Smoother.h"
@@ -11,10 +11,6 @@
 using namespace testing;
 using namespace dap;
 using namespace dap::crtp;
-
-class NoiseTest : public Test
-{
-};
 
 using node_t = dap::crtp::Node;
 template <typename... Ts>
@@ -27,7 +23,7 @@ using noise_t  = dap::crtp::ProcessorNode<NoiseGen,
                                          inputs_t<Control, NoiseGen::Color>,
                                          NODE_INPUT_NAMES("amplitude"_s, "color"_s)>;
 
-DAP_TEST_F(NoiseTest, OneOverF3)
+TEST(NoiseTest, OneOverF3)
 {
     noise_t noise;
 
@@ -60,7 +56,7 @@ DAP_TEST_F(NoiseTest, OneOverF3)
         length += file.writef(buffer.data(), frames);
     }
 }
-DAP_TEST_F(NoiseTest, feedback)
+TEST(NoiseTest, feedback)
 {
     using Delay =
         dap::crtp::ProcessorNode<dap::dsp::FeedbackLine<float, 32768>,

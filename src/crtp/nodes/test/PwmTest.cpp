@@ -1,10 +1,10 @@
 #include "dsp/Pwm.h"
 #include "crtp/nodes/Node.h"
 #include "dap_audio_test.h"
-#include "dap_gtest.h"
 #include "dsp/CombFilter.h"
 #include "dsp/Smoother.h"
 
+#include <gtest/gtest.h>
 #include <vector>
 
 using namespace testing;
@@ -19,10 +19,7 @@ using BasePwm  = dap::crtp::ProcessorNode<
     inputs_t<float, float, float, float, float>,
     NODE_INPUT_NAMES("amplitude"_s, "frequency"_s, "phase"_s, "samplerate"_s, "dutycycle"_s)>;
 
-class PwmTest : public Test
-{
-};
-DAP_TEST_F(PwmTest, SimplePwm)
+TEST(PwmTest, SimplePwm)
 {
     BasePwm osc;
 
@@ -61,7 +58,7 @@ DAP_TEST_F(PwmTest, SimplePwm)
 
     DAP_ASSERT_AUDIO_EQ("simple_pwm_expected.wav", "simple_pwm.wav");
 }
-DAP_TEST_F(PwmTest, FeedbackPwm)
+TEST(PwmTest, FeedbackPwm)
 {
     using CombFilter =
         dap::crtp::ProcessorNode<dap::dsp::FeedbackCombFilter<float, 32768>,

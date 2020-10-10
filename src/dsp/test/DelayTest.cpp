@@ -1,26 +1,22 @@
 #include "dsp/DelayLine.h"
 #include "dsp/FeedbackLine.h"
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 
 using namespace testing;
 using namespace dap;
 using namespace dap::dsp;
 
-class DelayTest : public Test
-{
-};
-
-DAP_TEST_F(DelayTest, 4samples)
+TEST(DelayTest, 4samples)
 {
     DelayLine<float, 8> delay;
     std::array<float, 20> expected(
         {{0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}});
     for (size_t i = 0; i < 20; i++)
     {
-        DAP_ASSERT_FLOAT_EQ(expected[i], delay(i, 4));
+        ASSERT_FLOAT_EQ(expected[i], delay(i, 4));
     }
 }
-DAP_TEST_F(DelayTest, 4d5samples)
+TEST(DelayTest, 4d5samples)
 {
     DelayLine<float, 8> delay;
     std::array<float, 20> expected(
@@ -28,10 +24,10 @@ DAP_TEST_F(DelayTest, 4d5samples)
           5.5f, 6.5f, 7.5f, 8.5f, 9.5f, 10.5f, 11.5f, 12.5f, 13.5f, 14.5f}});
     for (size_t i = 0; i < 20; i++)
     {
-        DAP_ASSERT_FLOAT_EQ(expected[i], delay(i, 4.5f));
+        ASSERT_FLOAT_EQ(expected[i], delay(i, 4.5f));
     }
 }
-DAP_TEST_F(DelayTest, 4samplesWithFeedback)
+TEST(DelayTest, 4samplesWithFeedback)
 {
     const float g = 0.5;
     const float g2 = g*g;
@@ -61,6 +57,6 @@ DAP_TEST_F(DelayTest, 4samplesWithFeedback)
                                      15.0f / k + g * 10.0f / k2 + g2 * 5.0f / k3}});
     for (size_t i = 0; i < 20; i++)
     {
-        DAP_ASSERT_FLOAT_EQ(expected[i], delay(i, 4.0f, g));
+        ASSERT_FLOAT_EQ(expected[i], delay(i, 4.0f, g));
     }
 }

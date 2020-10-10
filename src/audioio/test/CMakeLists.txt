@@ -1,4 +1,3 @@
-include (DapGtestLinkLibraries)
 set (target dap_audioio_tests)
 
 set (headers
@@ -13,5 +12,5 @@ set (sources
     )
 
 add_executable (${target} ${sources} ${headers})
-dap_gtest_link_libraries (${target} dap_audioio)
+target_link_libraries (${target} dap_audioio GTest::gtest)
 add_test (${target} ${target} --gtest_output=xml)

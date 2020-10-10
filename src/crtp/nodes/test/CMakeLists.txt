@@ -1,4 +1,3 @@
-include (DapGtestLinkLibraries)
 set (target dap_crtp_nodes_tests)
 
 set (headers
@@ -13,7 +12,7 @@ set (sources
     )
 
 add_executable(${target} ${sources})
-dap_gtest_link_libraries(${target} dap_crtp_nodes dap_fastmath sndfile)
+target_link_libraries(${target} dap_crtp_nodes dap_fastmath SndFile::sndfile GTest::gtest)
 add_test (${target} ${target} --gtest_output=xml)
 
 foreach (f

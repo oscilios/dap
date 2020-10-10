@@ -1,4 +1,4 @@
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 #include <iostream>
 #include <vector>
 
@@ -66,7 +66,8 @@ namespace dap
         public:
             constexpr static const char* getName() noexcept
             {
-                return "Derived2"; // same name as Derived2 so one of the two will not be possible to register
+                return "Derived2"; // same name as Derived2 so one of the two will not be possible
+                                   // to register
             }
             int ivalue() override
             {
@@ -174,9 +175,11 @@ namespace dap
             ProductType::getName(), &Registrar<test::Base, ProductType, __VA_ARGS__>::create)
 
 DAP_TEST_REGISTER(dap::test::Derived1);
-// DAP_TEST_REGISTER(dap::test::Derived1); // impossible to double register as it yields a compile error
+// DAP_TEST_REGISTER(dap::test::Derived1); // impossible to double register as it yields a compile
+// error
 DAP_TEST_REGISTER(dap::test::Derived2);
-// DAP_TEST_REGISTER(dap::test::Derived3); // can't be done because it throws runtime error for duplicate key
+// DAP_TEST_REGISTER(dap::test::Derived3); // can't be done because it throws runtime error for
+// duplicate key
 DAP_TEST_REGISTER_WITH_ARGS(dap::test::DerivedN, int&&);
 DAP_TEST_REGISTER_WITH_ARGS(dap::test::DerivedN2, int&&, float&&);
 DAP_TEST_REGISTER_WITH_ARGS(dap::test::DerivedNTemplate<double>, double&&);
@@ -187,64 +190,64 @@ class AbstractFactoryTest : public Test
 {
 };
 
-DAP_TEST_F(AbstractFactoryTest, createDerivedWithNoArguments)
+TEST_F(AbstractFactoryTest, createDerivedWithNoArguments)
 {
     using namespace dap::test;
 
     auto d1 = createBaseProduct("Derived1");
-    DAP_ASSERT_TRUE(d1 != nullptr);
-    DAP_ASSERT_EQ(1, d1->ivalue());
+    ASSERT_TRUE(d1 != nullptr);
+    ASSERT_EQ(1, d1->ivalue());
 
     auto d2 = createBaseProduct("Derived2");
-    DAP_ASSERT_TRUE(d2 != nullptr);
-    DAP_ASSERT_EQ(2, d2->ivalue());
+    ASSERT_TRUE(d2 != nullptr);
+    ASSERT_EQ(2, d2->ivalue());
 
     try
     {
         auto nil = createBaseProduct("nil");
-        DAP_ASSERT_TRUE(false);
+        ASSERT_TRUE(false);
     }
     catch (const std::exception& e)
     {
-        DAP_ASSERT_TRUE(true);
+        ASSERT_TRUE(true);
     }
 }
 
-DAP_TEST_F(AbstractFactoryTest, createDerivedWithOneArgument)
+TEST_F(AbstractFactoryTest, createDerivedWithOneArgument)
 {
     using namespace dap::test;
     auto dN = createBaseProduct("DerivedN", 3);
 
-    DAP_ASSERT_TRUE(dN != nullptr);
-    DAP_ASSERT_EQ(3, dN->ivalue());
+    ASSERT_TRUE(dN != nullptr);
+    ASSERT_EQ(3, dN->ivalue());
 }
 
-DAP_TEST_F(AbstractFactoryTest, createDerivedWithTwoArguments)
+TEST_F(AbstractFactoryTest, createDerivedWithTwoArguments)
 {
     using namespace dap::test;
 
     auto dN2 = createBaseProduct("DerivedN2", 42, 4.2f);
 
-    DAP_ASSERT_TRUE(dN2 != nullptr);
-    DAP_ASSERT_EQ(42, dN2->ivalue());
-    DAP_ASSERT_FLOAT_EQ(4.2f, dN2->fvalue());
+    ASSERT_TRUE(dN2 != nullptr);
+    ASSERT_EQ(42, dN2->ivalue());
+    ASSERT_FLOAT_EQ(4.2f, dN2->fvalue());
 }
-DAP_TEST_F(AbstractFactoryTest, createDerivedTemplateWithOneArgument)
+TEST_F(AbstractFactoryTest, createDerivedTemplateWithOneArgument)
 {
     using namespace dap::test;
     auto withInt    = createBaseProduct("DerivedNTemplate", 42);
     auto withDouble = createBaseProduct("DerivedNTemplate", 4.2);
     auto withUInt   = createBaseProduct("DerivedNTemplate", 43u);
 
-    DAP_ASSERT_TRUE(withDouble != nullptr);
-    DAP_ASSERT_EQ(4, withDouble->ivalue());
-    DAP_ASSERT_FLOAT_EQ(4.2, withDouble->fvalue());
-    DAP_ASSERT_FLOAT_EQ(42, withInt->ivalue());
-    DAP_ASSERT_FLOAT_EQ(42.0f, withInt->fvalue());
-    DAP_ASSERT_EQ(43, withUInt->ivalue());
-    DAP_ASSERT_EQ(43.0f, withUInt->fvalue());
+    ASSERT_TRUE(withDouble != nullptr);
+    ASSERT_EQ(4, withDouble->ivalue());
+    ASSERT_FLOAT_EQ(4.2, withDouble->fvalue());
+    ASSERT_FLOAT_EQ(42, withInt->ivalue());
+    ASSERT_FLOAT_EQ(42.0f, withInt->fvalue());
+    ASSERT_EQ(43, withUInt->ivalue());
+    ASSERT_EQ(43.0f, withUInt->fvalue());
 }
-DAP_TEST_F(AbstractFactoryTest, dump)
+TEST_F(AbstractFactoryTest, dump)
 {
     std::cout << "Factory 1:\n" << AbstractFactory<test::Base>() << std::endl;
     std::cout << "Factory 2:\n" << AbstractFactory<test::Base, int&&>() << std::endl;

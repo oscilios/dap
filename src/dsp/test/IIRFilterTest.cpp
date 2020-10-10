@@ -1,16 +1,12 @@
 #include "dsp/IIRFilter.h"
 #include "fastmath/Var.h"
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 
 using namespace testing;
 using namespace dap;
 using namespace dap::dsp;
 
-class IIRFilterTest : public Test
-{
-};
-
-DAP_TEST_F(IIRFilterTest, pink)
+TEST(IIRFilterTest, pink)
 {
     std::vector<var> a     = {1, -2.494956002, 2.017265875, -0.522189400};
     std::vector<var> b     = {0.049922035, -0.095993537, 0.050612699, -0.004408786};
@@ -20,11 +16,11 @@ DAP_TEST_F(IIRFilterTest, pink)
     std::vector<var> expected = {0.049922, 0.128404, 0.228048, 0.344537, 0.475280, 0.618652};
     for (size_t i = 0; i < input.size(); i++)
     {
-        DAP_ASSERT_NEAR(expected[i], filter(input[i]), 1e-4f);
+        ASSERT_NEAR(expected[i], filter(input[i]), 1e-4f);
     }
 }
 
-DAP_TEST_F(IIRFilterTest, oneOverF_pulse)
+TEST(IIRFilterTest, oneOverF_pulse)
 {
     std::vector<var> a = {1, -2.494956002, 2.017265875, -0.522189400};
     std::vector<var> b = {0.049922035, -0.095993537, 0.050612699, -0.004408786};
@@ -44,10 +40,10 @@ DAP_TEST_F(IIRFilterTest, oneOverF_pulse)
                                  0.0093506};
     for (size_t i = 0; i < input.size(); i++)
     {
-        DAP_ASSERT_NEAR(expected[i], filter(input[i]), 1e-4f);
+        ASSERT_NEAR(expected[i], filter(input[i]), 1e-4f);
     }
 }
-DAP_TEST_F(IIRFilterTest, oneOverF2_step)
+TEST(IIRFilterTest, oneOverF2_step)
 {
     std::vector<var> a = {1, -2.494956002, 2.017265875, -0.522189400};
     std::vector<var> b = {0.049922035, -0.095993537, 0.050612699, -0.004408786};
@@ -69,6 +65,6 @@ DAP_TEST_F(IIRFilterTest, oneOverF2_step)
                                  0.0305916};
     for (size_t i = 0; i < input.size(); i++)
     {
-        DAP_ASSERT_NEAR(expected[i], f2(f1(input[i])), 1e-4f);
+        ASSERT_NEAR(expected[i], f2(f1(input[i])), 1e-4f);
     }
 }

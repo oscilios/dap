@@ -3,7 +3,7 @@
 #include <oscpack/ip/IpEndpointName.h>
 #include <oscpack/ip/UdpSocket.h>
 #include <oscpack/osc/OscOutboundPacketStream.h>
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 
 using namespace testing;
 using namespace dap;
@@ -22,7 +22,7 @@ TEST(OscReceiverTest, simple)
                   << v[1].to<int>() << " " << v[2].to<float>() << " " << v[3].to<const char*>()
                   << std::endl;
     });
-    DAP_ASSERT_TRUE(registered);
+    ASSERT_TRUE(registered);
     oscReceiver.run();
     while (n++ < 1000)
     {

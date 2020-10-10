@@ -2,9 +2,9 @@
 #include "base/Streamable.h"
 #include "crtp/nodes/Node.h"
 #include "dap_audio_test.h"
-#include "dap_gtest.h"
 #include "dsp/Smoother.h"
 
+#include <gtest/gtest.h>
 #include <vector>
 
 using namespace testing;
@@ -32,10 +32,7 @@ using Modulator     = decltype(Osc{} + Control{});
 using FreqModulator = Modulator;
 using FMOsc         = BaseOsc<AmpControl, FreqModulator, PhaseControl>;
 
-class OscillatorTest : public Test
-{
-};
-DAP_TEST_F(OscillatorTest, SinOscWithoutPortamentoTest)
+TEST(OscillatorTest, SinOscWithoutPortamentoTest)
 {
     BaseOsc<float, float, float> osc;
 
@@ -75,7 +72,7 @@ DAP_TEST_F(OscillatorTest, SinOscWithoutPortamentoTest)
     DAP_ASSERT_AUDIO_EQ("simple_osc_expected.wav", "simple_osc.wav");
 }
 
-DAP_TEST_F(OscillatorTest, SinOscTest)
+TEST(OscillatorTest, SinOscTest)
 {
     Osc osc;
 
@@ -121,7 +118,7 @@ DAP_TEST_F(OscillatorTest, SinOscTest)
 
     DAP_ASSERT_AUDIO_EQ("osc_expected.wav", "osc.wav");
 }
-DAP_TEST_F(OscillatorTest, AdditiveTest)
+TEST(OscillatorTest, AdditiveTest)
 {
     Osc osc1;
     Osc osc2;
@@ -177,7 +174,7 @@ DAP_TEST_F(OscillatorTest, AdditiveTest)
     }
     DAP_ASSERT_AUDIO_EQ("additive_expected.wav", "additive.wav");
 }
-DAP_TEST_F(OscillatorTest, RMTest)
+TEST(OscillatorTest, RMTest)
 {
     using RMOscillator = MultiplyNode<Osc*, Osc*>;
 
@@ -238,7 +235,7 @@ DAP_TEST_F(OscillatorTest, RMTest)
     }
     DAP_ASSERT_AUDIO_EQ("rm_expected.wav", "rm.wav");
 }
-DAP_TEST_F(OscillatorTest, ModTest)
+TEST(OscillatorTest, ModTest)
 {
     const float samplerate = 44100.0;
 
@@ -269,10 +266,10 @@ DAP_TEST_F(OscillatorTest, ModTest)
         min_         = std::min(x, min_);
         max_         = std::max(x, max_);
     }
-    DAP_ASSERT_FLOAT_EQ(9.5f, min_);
-    DAP_ASSERT_FLOAT_EQ(10.5f, max_);
+    ASSERT_FLOAT_EQ(9.5f, min_);
+    ASSERT_FLOAT_EQ(10.5f, max_);
 }
-DAP_TEST_F(OscillatorTest, FMTest)
+TEST(OscillatorTest, FMTest)
 {
     FMOsc osc;
 
@@ -298,7 +295,7 @@ DAP_TEST_F(OscillatorTest, FMTest)
     modOsc.input("frequency"_s).input("value"_s)    = 130.81f;
     modOsc.input("frequency"_s).input("duration"_s) = portamentoSamples;
 
-    modOsc.input("amplitude"_s).input("value"_s) = 50.0f;
+    modOsc.input("amplitude"_s).input("value"_s)    = 50.0f;
     modOsc.input("amplitude"_s).input("duration"_s) = portamentoSamples;
 
     modOsc.input("phase"_s).input("value"_s)    = 0;

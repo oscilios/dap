@@ -1,4 +1,4 @@
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 #include "fastmath/ArrayOps.h"
 #include "fastmath/AlignedVector.h"
 #include <cmath>
@@ -9,10 +9,6 @@ using namespace dap;
 
 template <typename T>
 using aligned_vector = dap::fastmath::AlignedVector<T>;
-
-class ArrayOpsTest : public Test
-{
-};
 
 template <typename T, typename Alloc>
 void print(const std::vector<T, Alloc>& v)
@@ -27,10 +23,10 @@ void print(const std::vector<T, Alloc>& v)
 template <typename T, typename Alloc>
 void assert_near(const std::vector<T, Alloc>& a, const std::vector<T, Alloc>& b, float eps)
 {
-    DAP_ASSERT_EQ(a.size(), b.size());
+    ASSERT_EQ(a.size(), b.size());
     for (size_t i = 0; i < a.size(); ++i)
     {
-        DAP_ASSERT_NEAR(a[i], b[i], eps);
+        ASSERT_NEAR(a[i], b[i], eps);
     }
 }
 template <typename T, typename Alloc>
@@ -38,11 +34,11 @@ void assert_near(const std::vector<std::complex<T>, Alloc>& a,
                  const std::vector<std::complex<T>, Alloc>& b,
                  float eps)
 {
-    DAP_ASSERT_EQ(a.size(), b.size());
+    ASSERT_EQ(a.size(), b.size());
     for (size_t i = 0; i < a.size(); ++i)
     {
-        DAP_ASSERT_NEAR(a[i].real(), b[i].real(), eps);
-        DAP_ASSERT_NEAR(a[i].imag(), b[i].imag(), eps);
+        ASSERT_NEAR(a[i].real(), b[i].real(), eps);
+        ASSERT_NEAR(a[i].imag(), b[i].imag(), eps);
     }
 }
 
@@ -50,37 +46,37 @@ template <typename T>
 void test_all()
 {
     aligned_vector<T> v(10, T(1));
-    DAP_ASSERT_TRUE(fastmath::all(v.data(), v.size()));
+    ASSERT_TRUE(fastmath::all(v.data(), v.size()));
 
     v[0] = T(0);
-    DAP_ASSERT_FALSE(fastmath::all(v.data(), v.size()));
+    ASSERT_FALSE(fastmath::all(v.data(), v.size()));
 }
 template <typename T>
 void test_any()
 {
     aligned_vector<T> v(10, T(0));
-    DAP_ASSERT_FALSE(fastmath::any(v.data(), v.size()));
+    ASSERT_FALSE(fastmath::any(v.data(), v.size()));
 
     v[0] = T(1);
-    DAP_ASSERT_TRUE(fastmath::any(v.data(), v.size()));
+    ASSERT_TRUE(fastmath::any(v.data(), v.size()));
 }
 template <typename T>
 void test_allFinite()
 {
     aligned_vector<T> v(10, T(0));
-    DAP_ASSERT_TRUE(fastmath::allFinite(v.data(), v.size()));
+    ASSERT_TRUE(fastmath::allFinite(v.data(), v.size()));
 
     v[0] = std::numeric_limits<T>::infinity();
-    DAP_ASSERT_FALSE(fastmath::allFinite(v.data(), v.size()));
+    ASSERT_FALSE(fastmath::allFinite(v.data(), v.size()));
 }
 template <typename T>
 void test_hasNaN()
 {
     aligned_vector<T> v(10, T(0));
-    DAP_ASSERT_FALSE(fastmath::hasNaN(v.data(), v.size()));
+    ASSERT_FALSE(fastmath::hasNaN(v.data(), v.size()));
 
     v[0] = std::log(T(-1.0));
-    DAP_ASSERT_TRUE(fastmath::hasNaN(v.data(), v.size()));
+    ASSERT_TRUE(fastmath::hasNaN(v.data(), v.size()));
 }
 template <typename T>
 void test_abs()
@@ -88,7 +84,7 @@ void test_abs()
     aligned_vector<T> v({T(-1), T(-2), T(-3)});
     fastmath::abs(v.data(), v.data(), v.size());
     aligned_vector<T> expected({T(1), T(2), T(3)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_abs2()
@@ -96,7 +92,7 @@ void test_abs2()
     aligned_vector<T> v({T(-1), T(-2), T(-3)});
     fastmath::abs2(v.data(), v.data(), v.size());
     aligned_vector<T> expected({T(1), T(4), T(9)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_normalize()
@@ -105,7 +101,7 @@ void test_normalize()
     fastmath::normalize(v.data(), v.size());
     T sum = std::sqrt(14);
     aligned_vector<T> expected({T(-1.0 / sum), T(-2.0f / sum), T(-3.0 / sum)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_cos()
@@ -161,7 +157,7 @@ void test_max()
     {
         v[i] = i;
     }
-    DAP_ASSERT_EQ(T(9), fastmath::max(v.data(), v.size()));
+    ASSERT_EQ(T(9), fastmath::max(v.data(), v.size()));
 }
 template <typename T>
 void test_min()
@@ -172,7 +168,7 @@ void test_min()
     {
         v[i] = i;
     }
-    DAP_ASSERT_EQ(T(0), fastmath::min(v.data(), v.size()));
+    ASSERT_EQ(T(0), fastmath::min(v.data(), v.size()));
 }
 template <typename T>
 void test_sum()
@@ -185,7 +181,7 @@ void test_sum()
         sum += i;
         v[i] = i;
     }
-    DAP_ASSERT_EQ(T(sum), fastmath::sum(v.data(), v.size()));
+    ASSERT_EQ(T(sum), fastmath::sum(v.data(), v.size()));
 }
 template <typename T>
 void test_prod()
@@ -198,7 +194,7 @@ void test_prod()
         v[i] = i + 1;
         prod *= i + 1;
     }
-    DAP_ASSERT_EQ(T(prod), fastmath::prod(v.data(), v.size()));
+    ASSERT_EQ(T(prod), fastmath::prod(v.data(), v.size()));
 }
 template <typename T>
 void test_mean()
@@ -211,7 +207,7 @@ void test_mean()
         sum += i;
         v[i] = i;
     }
-    DAP_ASSERT_EQ(T(sum) / T(size), fastmath::mean(v.data(), v.size()));
+    ASSERT_EQ(T(sum) / T(size), fastmath::mean(v.data(), v.size()));
 }
 template <typename T>
 void test_fill()
@@ -221,7 +217,7 @@ void test_fill()
     aligned_vector<T> v(size, 0);
     aligned_vector<T> expected(size, value);
     fastmath::fill(value, v.data(), v.size());
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_linspace()
@@ -243,13 +239,13 @@ void test_norm()
     aligned_vector<T> v({T(1), T(2), T(3)});
     float result = 0;
     fastmath::norm(&result, v.data(), v.size());
-    DAP_ASSERT_FLOAT_EQ(sqrt(14.), result);
+    ASSERT_FLOAT_EQ(sqrt(14.), result);
 }
 template <typename T>
 void test_squaredNorm()
 {
     aligned_vector<T> v({T(1), T(2), T(3)});
-    DAP_ASSERT_FLOAT_EQ(14., fastmath::squaredNorm(v.data(), v.size()));
+    ASSERT_FLOAT_EQ(14., fastmath::squaredNorm(v.data(), v.size()));
 }
 template <typename T>
 void test_square()
@@ -257,7 +253,7 @@ void test_square()
     aligned_vector<T> v({T(-1), T(-2), T(-3)});
     fastmath::square(v.data(), v.data(), v.size());
     aligned_vector<T> expected({T(1), T(4), T(9)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_cube()
@@ -265,7 +261,7 @@ void test_cube()
     aligned_vector<T> v({T(-1), T(-2), T(-3)});
     fastmath::cube(v.data(), v.data(), v.size());
     aligned_vector<T> expected({T(-1), T(-8), T(-27)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_pow()
@@ -273,7 +269,7 @@ void test_pow()
     aligned_vector<T> v({T(-1), T(-2), T(-3)});
     fastmath::pow(T(3), v.data(), v.data(), v.size());
     aligned_vector<T> expected({T(-1), T(-8), T(-27)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_sqrt()
@@ -281,7 +277,7 @@ void test_sqrt()
     aligned_vector<T> v({T(1), T(4), T(9)});
     fastmath::sqrt(v.data(), v.data(), v.size());
     aligned_vector<T> expected({T(1), T(2), T(3)});
-    DAP_ASSERT_EQ(expected, v);
+    ASSERT_EQ(expected, v);
 }
 template <typename T>
 void test_exp()
@@ -361,206 +357,206 @@ void test_div()
     assert_near(expected, x, 1e-6);
 }
 
-DAP_TEST_F(ArrayOpsTest, all)
+TEST(ArrayOpsTest, all)
 {
     test_all<int>();
     test_all<float>();
     test_all<size_t>();
     test_all<double>();
 }
-DAP_TEST_F(ArrayOpsTest, any)
+TEST(ArrayOpsTest, any)
 {
     test_any<int>();
     test_any<float>();
     test_any<size_t>();
     test_any<double>();
 }
-DAP_TEST_F(ArrayOpsTest, allFinite)
+TEST(ArrayOpsTest, allFinite)
 {
     test_allFinite<float>();
     test_allFinite<double>();
 }
-DAP_TEST_F(ArrayOpsTest, hasNaN)
+TEST(ArrayOpsTest, hasNaN)
 {
     test_hasNaN<float>();
     test_hasNaN<double>();
 }
-DAP_TEST_F(ArrayOpsTest, abs)
+TEST(ArrayOpsTest, abs)
 {
     test_abs<int>();
     test_abs<float>();
     test_abs<double>();
 }
-DAP_TEST_F(ArrayOpsTest, abs2)
+TEST(ArrayOpsTest, abs2)
 {
     test_abs2<int>();
     test_abs2<float>();
     test_abs2<double>();
 }
-DAP_TEST_F(ArrayOpsTest, normalize)
+TEST(ArrayOpsTest, normalize)
 {
     test_normalize<int>();
     test_normalize<float>();
     test_normalize<double>();
 }
-DAP_TEST_F(ArrayOpsTest, cos)
+TEST(ArrayOpsTest, cos)
 {
     test_cos<float>();
     test_cos<double>();
 }
-DAP_TEST_F(ArrayOpsTest, sin)
+TEST(ArrayOpsTest, sin)
 {
     test_sin<float>();
     test_sin<double>();
 }
-DAP_TEST_F(ArrayOpsTest, tan)
+TEST(ArrayOpsTest, tan)
 {
     test_tan<float>();
     test_tan<double>();
 }
-DAP_TEST_F(ArrayOpsTest, acos)
+TEST(ArrayOpsTest, acos)
 {
     test_acos<float>();
     test_acos<double>();
 }
-DAP_TEST_F(ArrayOpsTest, asin)
+TEST(ArrayOpsTest, asin)
 {
     test_asin<float>();
     test_asin<double>();
 }
-DAP_TEST_F(ArrayOpsTest, max)
+TEST(ArrayOpsTest, max)
 {
     test_max<int>();
     test_max<size_t>();
     test_max<float>();
     test_max<double>();
 }
-DAP_TEST_F(ArrayOpsTest, min)
+TEST(ArrayOpsTest, min)
 {
     test_min<int>();
     test_min<size_t>();
     test_min<float>();
     test_min<double>();
 }
-DAP_TEST_F(ArrayOpsTest, sum)
+TEST(ArrayOpsTest, sum)
 {
     test_sum<int>();
     test_sum<size_t>();
     test_sum<float>();
     test_sum<double>();
 }
-DAP_TEST_F(ArrayOpsTest, prod)
+TEST(ArrayOpsTest, prod)
 {
     test_prod<int>();
     test_prod<size_t>();
     test_prod<float>();
     test_prod<double>();
 }
-DAP_TEST_F(ArrayOpsTest, mean)
+TEST(ArrayOpsTest, mean)
 {
     test_mean<int>();
     test_mean<size_t>();
     test_mean<float>();
     test_mean<double>();
 }
-DAP_TEST_F(ArrayOpsTest, fill)
+TEST(ArrayOpsTest, fill)
 {
     test_fill<int>();
     test_fill<size_t>();
     test_fill<float>();
     test_fill<double>();
 }
-DAP_TEST_F(ArrayOpsTest, linspace)
+TEST(ArrayOpsTest, linspace)
 {
     test_linspace<int>();
     test_linspace<size_t>();
     test_linspace<float>();
     test_linspace<double>();
 }
-DAP_TEST_F(ArrayOpsTest, norm)
+TEST(ArrayOpsTest, norm)
 {
     test_norm<float>();
     test_norm<double>();
 }
-DAP_TEST_F(ArrayOpsTest, squaredNorm)
+TEST(ArrayOpsTest, squaredNorm)
 {
     test_squaredNorm<float>();
     test_squaredNorm<double>();
 }
-DAP_TEST_F(ArrayOpsTest, square)
+TEST(ArrayOpsTest, square)
 {
     test_square<int>();
     test_square<size_t>();
     test_square<float>();
     test_square<double>();
 }
-DAP_TEST_F(ArrayOpsTest, cube)
+TEST(ArrayOpsTest, cube)
 {
     test_cube<int>();
     test_cube<size_t>();
     test_cube<float>();
     test_cube<double>();
 }
-DAP_TEST_F(ArrayOpsTest, pow)
+TEST(ArrayOpsTest, pow)
 {
     test_pow<int>();
     test_pow<size_t>();
     test_pow<float>();
     test_pow<double>();
 }
-DAP_TEST_F(ArrayOpsTest, sqrt)
+TEST(ArrayOpsTest, sqrt)
 {
     test_sqrt<int>();
     test_sqrt<size_t>();
     test_sqrt<float>();
     test_sqrt<double>();
 }
-DAP_TEST_F(ArrayOpsTest, exp)
+TEST(ArrayOpsTest, exp)
 {
     test_exp<int>();
     test_exp<size_t>();
     test_exp<float>();
     test_exp<double>();
 }
-DAP_TEST_F(ArrayOpsTest, log)
+TEST(ArrayOpsTest, log)
 {
     test_log<float>();
     test_log<double>();
 }
-DAP_TEST_F(ArrayOpsTest, inverse)
+TEST(ArrayOpsTest, inverse)
 {
     test_inverse<float>();
     test_inverse<double>();
 }
-DAP_TEST_F(ArrayOpsTest, conjugate)
+TEST(ArrayOpsTest, conjugate)
 {
     test_conjugate<int>();
     test_conjugate<size_t>();
     test_conjugate<float>();
     test_conjugate<double>();
 }
-DAP_TEST_F(ArrayOpsTest, add)
+TEST(ArrayOpsTest, add)
 {
     test_add<int>();
     test_add<size_t>();
     test_add<float>();
     test_add<double>();
 }
-DAP_TEST_F(ArrayOpsTest, sub)
+TEST(ArrayOpsTest, sub)
 {
     test_sub<int>();
     test_sub<size_t>();
     test_sub<float>();
     test_sub<double>();
 }
-DAP_TEST_F(ArrayOpsTest, mul)
+TEST(ArrayOpsTest, mul)
 {
     test_mul<int>();
     test_mul<size_t>();
     test_mul<float>();
     test_mul<double>();
 }
-DAP_TEST_F(ArrayOpsTest, div)
+TEST(ArrayOpsTest, div)
 {
     test_div<int>();
     test_div<size_t>();

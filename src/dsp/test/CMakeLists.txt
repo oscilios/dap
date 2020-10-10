@@ -1,4 +1,3 @@
-include (DapGtestLinkLibraries)
 set (target dap_crtp_dsp_tests)
 
 set (headers
@@ -12,5 +11,5 @@ set (sources
      test.cpp)
 
 add_executable(${target} ${sources})
-dap_gtest_link_libraries(${target} dap_dsp dap_fastmath)
+target_link_libraries(${target} dap_dsp dap_fastmath GTest::gtest)
 add_test (${target} ${target} --gtest_output=xml)

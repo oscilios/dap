@@ -1,4 +1,4 @@
-#include "dap_gtest.h"
+#include <gtest/gtest.h>
 #include <vector>
 #include <iostream>
 #include <limits>
@@ -28,10 +28,7 @@ struct MyOp2
     }
 };
 
-class FunctionTest : public Test
-{
-};
-DAP_TEST_F(FunctionTest, function_composition)
+TEST(FunctionTest, function_composition)
 {
     var x = 3;
     var y = 2;
@@ -41,11 +38,11 @@ DAP_TEST_F(FunctionTest, function_composition)
     {
     auto expected = std::pow(3, 5) + 5;
     auto result = f(x,y);
-    DAP_ASSERT_EQ(expected, result());
+    ASSERT_EQ(expected, result());
     }
     {
     auto expected = (std::pow(3, 5) + 5) + 3;
     auto result = f2(f(x,y));
-    DAP_ASSERT_EQ(expected, result());
+    ASSERT_EQ(expected, result());
     }
 }

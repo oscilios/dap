@@ -1,4 +1,3 @@
-include (DapGtestLinkLibraries)
 set (target dap_fastmath_tests)
 
 set (headers)
@@ -14,6 +13,6 @@ set (sources
     )
 
 add_executable (${target} ${sources} ${headers})
-dap_gtest_link_libraries (${target} dap_fastmath)
+target_link_libraries (${target} dap_fastmath GTest::gtest)
 add_test (${target} ${target} --gtest_output=xml)
 
