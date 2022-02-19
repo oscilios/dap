@@ -68,7 +68,7 @@ TEST(ArrayTest, size_ctor)
 }
 TEST(ArrayTest, initializer_list)
 {
-    std::initializer_list<int> list({1, 2, 3, 4});
+    const auto list(std::initializer_list<int>{1, 2, 3, 4});
     Array<int> a(list);
     ASSERT_EQ(a.size(), list.size());
     ASSERT_TRUE(a.ownsMemory());
@@ -232,7 +232,7 @@ TEST(ArrayTest, ref2)
 }
 TEST(ArrayTest, range_loop)
 {
-    std::initializer_list<int> list({1, 2, 3, 4});
+    const auto list(std::initializer_list<int>{1, 2, 3, 4});
     std::vector<int> v(list);
     Array<int> a(list);
     ASSERT_EQ(a.size(), list.size());

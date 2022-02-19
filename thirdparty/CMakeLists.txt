@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.7.1)
 project (dap_thirdparty)
 include (ExternalProject)
 set (THIRDPARTY_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/install)

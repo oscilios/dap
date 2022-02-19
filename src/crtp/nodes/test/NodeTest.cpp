@@ -27,37 +27,6 @@ TEST(NodeTest, Sum)
     ASSERT_EQ(12, s);
 }
 
-TEST(NodeTest, AbstractInterface)
-{
-    std::vector<Node*> nodes;
-
-    AddNode<int, float> s(2, 3.5f);
-    nodes.push_back(&s);
-
-    for (auto& node : nodes)
-        node->process();
-
-    // using concrete interface
-    ASSERT_EQ(5.5, s());
-
-    // using abstract interface
-    auto& node = *nodes[0];
-    auto ports = node.ports();
-    ASSERT_EQ(2u, node.portCount());
-    ASSERT_EQ(2u, ports.size());
-    ASSERT_EQ(2, ports[0].get<int>());
-    ASSERT_EQ(3.5f, ports[1].get<float>());
-
-    ASSERT_EQ(&s, ports[0].getParent());
-    ASSERT_EQ(&s, ports[1].getParent());
-    ASSERT_EQ(0u, ports[0].getId());
-    ASSERT_EQ(1u, ports[1].getId());
-
-    float x = 7.5;
-    node.ports()[1].set(x);
-    ASSERT_EQ(7.5, ports[1].get<float>());
-    node.process();
-}
 TEST(NodeTest, UnaryNode)
 {
     ValueNode<float> x(2.0);
@@ -66,7 +35,6 @@ TEST(NodeTest, UnaryNode)
     ASSERT_EQ(25.0, y * y);
     ASSERT_EQ(29.0, x * x + y * y);
 
-    ValueNode<float> s = sqr(2.0);
     ASSERT_EQ(4.0, sqr(x));
 
     float pi = M_PI;

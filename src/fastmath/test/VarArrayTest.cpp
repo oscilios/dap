@@ -69,7 +69,7 @@ TEST(VarArrayTest, size_ctor)
 }
 TEST(VarArrayTest, initializer_list)
 {
-    std::initializer_list<int> list({1, 2, 3, 4});
+    const auto list(std::initializer_list<int>{1, 2, 3, 4});
     VarArray<Variable<int>> a(list);
     ASSERT_EQ(a.size(), list.size());
     ASSERT_TRUE(a.ownsMemory());
@@ -233,7 +233,7 @@ TEST(VarArrayTest, ref2)
 }
 TEST(VarArrayTest, range_loop)
 {
-    std::initializer_list<int> list({1, 2, 3, 4});
+    const auto list(std::initializer_list<int>{1, 2, 3, 4});
     std::vector<int> v(list);
     VarArray<Variable<int>> a(list);
     ASSERT_EQ(a.size(), list.size());

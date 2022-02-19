@@ -1,7 +1,6 @@
 #ifndef DAP_CRTP_NODES_NODE_H
 #define DAP_CRTP_NODES_NODE_H
 
-#include "Port.h"
 #include "fastmath/Var.h"
 #include <cassert>
 #include <memory>
@@ -45,7 +44,6 @@ namespace dap
 
         namespace traits
         {
-            struct Tuple2VectorOfPorts;
             template <typename T = void>
             struct IsCrtpNode
             {
@@ -102,7 +100,6 @@ namespace dap
     }
 }
 
-// class Node: represents runtime (virtual) interface
 class dap::crtp::Node
 {
 protected:
@@ -123,23 +120,6 @@ public:
     struct Inputs final : IOPlaceholder<Is...>
     {
     };
-
-    Node()            = default;
-    Node(const Node&) = default;
-    Node(Node&&)      = default;
-    virtual ~Node()   = default;
-    Node& operator=(const Node&) = default;
-    Node& operator=(Node&&)                     = default;
-    virtual std::vector<Port> ports()           = 0;
-    virtual size_t portCount() const            = 0;
-    virtual std::unique_ptr<Node> clone() const = 0;
-    void process()
-    {
-        compute();
-    }
-
-protected:
-    virtual void compute() = 0;
 };
 
 template <typename Derived, typename TInputs>
@@ -152,26 +132,6 @@ public:
     using base_type  = NodeExpression<Derived, TInputs>;
     using input_type = typename TInputs::type;
 
-private:
-    void compute() override
-    {
-        (*this)();
-    }
-    std::vector<Port> ports() override
-    {
-        std::vector<Port> result;
-        traits::Tuple2VectorOfPorts(m_inputs, result, this);
-        return result;
-    }
-    size_t portCount() const override
-    {
-        return inputCount();
-    }
-    std::unique_ptr<Node> clone() const override
-    {
-        return std::make_unique<Derived>(self());
-    }
-
 protected:
     input_type m_inputs;
 
@@ -179,7 +139,7 @@ public:
     NodeExpression()                      = default;
     NodeExpression(const NodeExpression&) = default;
     NodeExpression(NodeExpression&&)      = default;
-    ~NodeExpression() override            = default;
+    ~NodeExpression()                     = default;
     NodeExpression& operator=(const NodeExpression&) = default;
     NodeExpression& operator=(NodeExpression&&) = default;
     constexpr Derived& self()
@@ -345,8 +305,7 @@ public:
     }
     auto operator()()
     {
-        static constexpr auto indices =
-            std::make_index_sequence<base_type::inputCount()>{};
+        static constexpr auto indices = std::make_index_sequence<base_type::inputCount()>{};
         return callProcessor(indices);
     }
 };
@@ -364,9 +323,11 @@ namespace dap
             using targetTransform = typename TargetTransform<F, C1, C2>::type;
 
             template <template <class...> class F,
-                      template <class...> class C1,
+                      template <class...>
+                      class C1,
                       class... T1,
-                      template <class...> class C2,
+                      template <class...>
+                      class C2,
                       class... T2>
             struct TargetTransform<F, C1<T1...>, C2<T2...>>
             {
@@ -422,9 +383,8 @@ class dap::crtp::SplitNode
             detail::targetTransform<detail::targetcat, sink_names_t, dests_t>{};
 
         for_each(targets, [&](auto& target) {
-            for_each(target.inputNames(), [&](auto name) {
-                base_type::input(target.sinkName()).input(name) = value;
-            });
+            for_each(target.inputNames(),
+                     [&](auto name) { base_type::input(target.sinkName()).input(name) = value; });
         });
 
         return std::make_tuple(dispatch(std::get<1 + Is>(base_type::m_inputs))...);
@@ -486,52 +446,6 @@ auto dap::crtp::make_processor_node(Processor&&, Inputs&&, InputNames&&...)
 {
     return ProcessorNode<Processor, Inputs, std::tuple<InputNames...>>{};
 }
-
-namespace dap
-{
-    namespace crtp
-    {
-        namespace traits
-        {
-            struct Tuple2VectorOfPorts
-            {
-                template <int index, typename... Ts>
-                struct Insert
-                {
-                    void
-                    operator()(std::tuple<Ts...>& t, std::vector<crtp::Port>& v, crtp::Node* parent)
-                    {
-                        using size                   = std::tuple_size<std::tuple<Ts...>>;
-                        constexpr size_t reversedIdx = size::value - index - 1;
-                        v.emplace_back(crtp::Port(parent, reversedIdx, &std::get<reversedIdx>(t)));
-                        Insert<index - 1, Ts...>{}(t, v, parent);
-                    }
-                };
-
-                template <typename... Ts>
-                struct Insert<0, Ts...>
-                {
-                    void
-                    operator()(std::tuple<Ts...>& t, std::vector<crtp::Port>& v, crtp::Node* parent)
-                    {
-                        using size                   = std::tuple_size<std::tuple<Ts...>>;
-                        constexpr size_t reversedIdx = size::value - 1;
-                        v.emplace_back(crtp::Port(parent, reversedIdx, &std::get<reversedIdx>(t)));
-                    }
-                };
-
-                template <typename... Ts>
-                Tuple2VectorOfPorts(std::tuple<Ts...>& t,
-                                    std::vector<crtp::Port>& v,
-                                    crtp::Node* parent)
-                {
-                    using size = std::tuple_size<std::tuple<Ts...>>;
-                    Insert<size::value - 1, Ts...>{}(t, v, parent);
-                }
-            };
-        } // namespace traits
-    }     // namespace crtp
-} // namespace dap
 
 #include "private/BinaryNodeOpsImpl.hpp"
 #include "private/UnaryNodeOpsImpl.hpp"

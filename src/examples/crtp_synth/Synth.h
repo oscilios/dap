@@ -58,28 +58,10 @@ class crtp_synth::Synth final
 {
     using buffer_t = dap::fastmath::AudioBuffer<float>;
 
-private:
     buffer_t m_output;
     phaser_t<filter_t<mixer_t<am_fm_t, am_fm_t, noise_t>>> m_graph;
 
-public:
-    Synth(size_t bufferSize, scalar_t samplerate);
-    void setSamplerate(scalar_t samplerate);
-    void process()
-    {
-#if defined(__clang__)
-#pragma clang loop unroll_count(16)
-#endif
-        for (auto& x : m_output.channel(0))
-        {
-            x = m_graph();
-        }
-    }
-    const buffer_t& output() const
-    {
-        return m_output;
-    }
-    constexpr auto params()
+    auto params()
     {
         using std::make_tuple;
 
@@ -148,8 +130,26 @@ public:
             );
         // clang-format on
     }
+
+public:
+    Synth(size_t bufferSize, scalar_t samplerate);
+    void setSamplerate(scalar_t samplerate);
+    void process()
+    {
+#if defined(__clang__)
+#pragma clang loop unroll_count(16)
+#endif
+        for (auto& x : m_output.channel(0))
+        {
+            x = m_graph();
+        }
+    }
+    const buffer_t& output() const
+    {
+        return m_output;
+    }
     template <char... Chars>
-    constexpr auto& operator[](dap::constexpr_string<Chars...> key)
+    auto& operator[](dap::constexpr_string<Chars...> key)
     {
         return *params()[key];
     }
