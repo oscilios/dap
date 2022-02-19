@@ -9,7 +9,7 @@ static std::vector<std::unique_ptr<IAudioDevice>> createDeviceInfoList(AudioObje
 {
     AudioObjectPropertyAddress address = {kAudioHardwarePropertyDevices,
                                           kAudioObjectPropertyScopeGlobal,
-                                          kAudioObjectPropertyElementMaster};
+                                          kAudioObjectPropertyElementMain};
 
     auto propertySize = dap::coreaudio::getPropertySize(kAudioObjectSystemObject, &address);
     const int deviceCount = propertySize / sizeof(AudioDeviceID);

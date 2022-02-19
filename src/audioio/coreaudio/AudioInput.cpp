@@ -176,7 +176,7 @@ OSStatus AudioInput::setupBuffers()
     propertySize                       = sizeof(Float64);
     AudioObjectPropertyAddress address = {kAudioDevicePropertyNominalSampleRate,
                                           kAudioObjectPropertyScopeGlobal,
-                                          kAudioObjectPropertyElementMaster};
+                                          kAudioObjectPropertyElementMain};
     getProperty(m_device.getId(), &address, &rate);
 
     asbd.mSampleRate = rate;

@@ -85,14 +85,14 @@ OSStatus AudioDeviceListener::onAudioObjectPropertyNotification(
                 const AudioObjectPropertyAddress defaultAddr = {
                     kAudioHardwarePropertyDefaultOutputDevice,
                     kAudioObjectPropertyScopeGlobal,
-                    kAudioObjectPropertyElementMaster};
+                    kAudioObjectPropertyElementMain};
 
                 getProperty(kAudioObjectSystemObject, &defaultAddr, &defaultDevice);
 
                 AudioObjectPropertyAddress sourceAddr;
                 sourceAddr.mSelector = kAudioDevicePropertyDataSource;
                 sourceAddr.mScope    = kAudioDevicePropertyScopeOutput;
-                sourceAddr.mElement  = kAudioObjectPropertyElementMaster;
+                sourceAddr.mElement  = kAudioObjectPropertyElementMain;
 
                 UInt32 dataSourceId = 0;
                 getProperty(defaultDevice, &sourceAddr, &dataSourceId);
@@ -128,7 +128,7 @@ void AudioDeviceListener::addDeviceListeners()
 {
     AudioObjectPropertyAddress address = {kAudioDevicePropertyStreams,
                                           kAudioDevicePropertyScopeInput,
-                                          kAudioObjectPropertyElementMaster};
+                                          kAudioObjectPropertyElementMain};
 
     if (auto propertySize = getPropertySize(m_id, &address))
     {
@@ -175,7 +175,7 @@ void AudioDeviceListener::addDeviceListeners()
     // listener for unforseable device changes
     address.mSelector = kAudioDevicePropertyDeviceHasChanged;
     address.mScope    = kAudioObjectPropertyScopeGlobal;
-    address.mElement  = kAudioObjectPropertyElementMaster;
+    address.mElement  = kAudioObjectPropertyElementMain;
     addListener(m_id, &address);
 
     // listener for processor overload
@@ -194,7 +194,7 @@ void AudioDeviceListener::addDeviceListeners()
 
     address.mSelector = kAudioDevicePropertyDataSource;
     address.mScope    = kAudioDevicePropertyScopeOutput;
-    address.mElement  = kAudioObjectPropertyElementMaster;
+    address.mElement  = kAudioObjectPropertyElementMain;
     addListener(defaultOutputDevice, &address);
 }
 
@@ -202,7 +202,7 @@ void AudioDeviceListener::removeDeviceListeners()
 {
     AudioObjectPropertyAddress address = {kAudioDevicePropertyStreams,
                                           kAudioDevicePropertyScopeInput,
-                                          kAudioObjectPropertyElementMaster};
+                                          kAudioObjectPropertyElementMain};
 
     if (auto propertySize = getPropertySize(m_id, &address))
     {
@@ -249,7 +249,7 @@ void AudioDeviceListener::removeDeviceListeners()
     // listener for unforseable device changes
     address.mSelector = kAudioDevicePropertyDeviceHasChanged;
     address.mScope    = kAudioObjectPropertyScopeGlobal;
-    address.mElement  = kAudioObjectPropertyElementMaster;
+    address.mElement  = kAudioObjectPropertyElementMain;
     removeListener(m_id, &address);
 
     // listener for processor overload
@@ -268,6 +268,6 @@ void AudioDeviceListener::removeDeviceListeners()
 
     address.mSelector = kAudioDevicePropertyDataSource;
     address.mScope    = kAudioDevicePropertyScopeOutput;
-    address.mElement  = kAudioObjectPropertyElementMaster;
+    address.mElement  = kAudioObjectPropertyElementMain;
     removeListener(defaultOutputDevice, &address);
 }
