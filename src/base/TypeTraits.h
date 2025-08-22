@@ -363,12 +363,6 @@ namespace dap
     {
         return IsTuple<T>::value;
     }
-
-    template <typename... Ts>
-    constexpr bool tupleSize(std::tuple<Ts...>)
-    {
-        return std::tuple_size<std::tuple<Ts...>>::value;
-    }
     template <size_t size, typename... Ts>
     constexpr bool tupleSizeIs(std::tuple<Ts...>)
     {

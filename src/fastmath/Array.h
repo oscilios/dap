@@ -46,11 +46,17 @@ public:
     using array_type      = Array<value_type, Allocator>;
 
     template <typename Ttag, typename Tpointer, typename Treference>
-    class Iterator : public std::iterator<Ttag, value_type, difference_type, Tpointer, Treference>
+    class Iterator
     {
-        pointer m_ptr;
+        Tpointer m_ptr;
 
     public:
+        using iterator_category = Ttag;
+        using value_type = Array::value_type;
+        using difference_type = Array::difference_type;
+        using pointer = Tpointer;
+        using reference = Treference;
+
         explicit Iterator(pointer ptr_ = nullptr)
         : m_ptr(ptr_)
         {

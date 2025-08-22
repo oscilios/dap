@@ -1,13 +1,13 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import os, sys
 import subprocess
 
 def usage(progname):
-    print progname + ' <source_dir> <destination_dir> <build_type>'
+    print(progname + ' <source_dir> <destination_dir> <build_type>')
 
 if __name__ == '__main__':
-    print 'received ' + ' '.join(sys.argv)
+    print('received ' + ' '.join(sys.argv))
     if len(sys.argv) < 3:
         usage(sys.argv[0])
         sys.exit(-1)
