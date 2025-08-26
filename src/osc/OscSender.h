@@ -1,9 +1,9 @@
 #ifndef DAP_OSC_OSC_SENDER_H
 #define DAP_OSC_OSC_SENDER_H
 
-#include "oscpack/ip/IpEndpointName.h"
-#include "oscpack/ip/UdpSocket.h"
-#include "oscpack/osc/OscOutboundPacketStream.h"
+#include "ip/IpEndpointName.h"
+#include "ip/UdpSocket.h"
+#include "osc/OscOutboundPacketStream.h"
 #include <string>
 
 namespace dap

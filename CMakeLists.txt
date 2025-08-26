@@ -29,34 +29,12 @@ if(APPLE)
   set(CMAKE_INSTALL_RPATH ${MY_RPATH_LIST}) # set a list of paths for rpath
 endif()
 
-# ##############################################################################
-# thirdparty dependencies
-# ##############################################################################
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+include(thirdparty.cmake)
 
-set(THIRDPARTY_SRC_DIR ${CMAKE_SOURCE_DIR}/thirdparty)
-set(THIRDPARTY_DEST_DIR ${CMAKE_BINARY_DIR}/thirdparty)
-set(THIRDPARTY_INSTALL_DIR ${THIRDPARTY_DEST_DIR}/install)
-execute_process(
-  COMMAND ${CMAKE_SOURCE_DIR}/build_dependencies.py ${THIRDPARTY_SRC_DIR}
-          ${THIRDPARTY_DEST_DIR} ${CMAKE_BUILD_TYPE}
-  RESULT_VARIABLE THIRDPARTY_BUILD_RESULT)
-if(${THIRDPARTY_BUILD_RESULT})
-  message(FATAL_ERROR "External library dependencies were not found")
-endif()
-
-include_directories(${THIRDPARTY_INSTALL_DIR}/include)
-include_directories(${THIRDPARTY_INSTALL_DIR}/include/eigen3)
-list(APPEND CMAKE_PREFIX_PATH ${THIRDPARTY_INSTALL_DIR})
-
-find_package(benchmark REQUIRED)
-find_package(GTest REQUIRED)
-find_package(SndFile REQUIRED)
-
-# oscpack does not install cmake config files, so let's find it
-find_library(oscpack_LIBRARY oscpack REQUIRED)
-add_library(oscpack::oscpack STATIC IMPORTED)
-set_target_properties(oscpack::oscpack PROPERTIES IMPORTED_LOCATION
-                                                  ${oscpack_LIBRARY})
+# find_library(oscpack_LIBRARY oscpack REQUIRED) add_library(oscpack::oscpack
+# STATIC IMPORTED) set_target_properties(oscpack::oscpack PROPERTIES
+# IMPORTED_LOCATION ${oscpack_LIBRARY})
 # ##############################################################################
 # project directories
 # ##############################################################################

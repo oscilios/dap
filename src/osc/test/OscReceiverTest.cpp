@@ -1,8 +1,8 @@
 #include "osc/OscReceiver.h"
 #include "osc/OscSender.h"
-#include <oscpack/ip/IpEndpointName.h>
-#include <oscpack/ip/UdpSocket.h>
-#include <oscpack/osc/OscOutboundPacketStream.h>
+#include <ip/IpEndpointName.h>
+#include <ip/UdpSocket.h>
+#include <osc/OscOutboundPacketStream.h>
 #include <gtest/gtest.h>
 
 using namespace testing;

@@ -6,7 +6,7 @@
 #include <atomic>
 #include <future>
 #include <memory>
-#include <oscpack/osc/OscReceivedElements.h>
+#include <osc/OscReceivedElements.h>
 #include <unordered_map>
 #include <vector>
 
