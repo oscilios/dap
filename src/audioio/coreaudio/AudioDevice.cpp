@@ -152,7 +152,7 @@ void AudioDevice::init(AudioDeviceID id, AudioObjectPropertyScope scope)
     // obtain all available formats
     address = {kAudioStreamPropertyAvailablePhysicalFormats,
                kAudioObjectPropertyScopeGlobal,
-               kAudioObjectPropertyElementMaster};
+               kAudioObjectPropertyElementMain};
 
     if (auto propertySize = getPropertySize(m_ID, &address))
     {
@@ -171,7 +171,7 @@ void AudioDevice::init(AudioDeviceID id, AudioObjectPropertyScope scope)
     }
 
     // obtain device latency
-    address = {kAudioDevicePropertyLatency, m_scope, kAudioObjectPropertyElementMaster};
+    address = {kAudioDevicePropertyLatency, m_scope, kAudioObjectPropertyElementMain};
     if (!getProperty(m_ID, &address, &m_latency))
     {
         m_latency = 0;

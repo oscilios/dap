@@ -10,6 +10,12 @@ Although the code is mostly platform independant, this project as is will only b
 # example code
 Following an example for creating an fm oscillator where all controls are smoothed.  Please take a look at src/examples/crtp_synth for a more complex example.
 
+# build
+```cmake
+cmake -S . -B build --toolchain ToolChain.cmake
+cmake --build build
+```
+
 ```cpp
 #include "crtp/nodes/Processor.h"
 #include "dsp/Oscillator.h"

@@ -19,9 +19,10 @@ FetchContent_Declare(
 
 
 FetchContent_Declare(
-  osc_pack
+  oscpack
   GIT_REPOSITORY https://github.com/RossBencina/oscpack.git
   GIT_TAG release_1_1_0
+  BUILD_IN_SOURCE 1
   SYSTEM
   FIND_PACKAGE_ARGS
   )
@@ -55,4 +56,6 @@ FetchContent_Declare(
   FIND_PACKAGE_ARGS
   )
 
-FetchContent_MakeAvailable(googletest google_benchmark osc_pack eigen sndfile)
+FetchContent_MakeAvailable(googletest google_benchmark oscpack eigen sndfile)
+target_include_directories(oscpack PUBLIC ${oscpack_SOURCE_DIR})
+target_compile_options(oscpack PRIVATE -Wno-deprecated-declarations)

@@ -33,7 +33,7 @@ int main()
     crtp_synth::AudioProcess process(deviceId, channelCount, bufferSize, sampleRate);
     crtp_synth::OscEventSystem eventSystem(process);
 
-    bool started = process.start();
+    [[maybe_unused]] bool started = process.start();
     assert(started);
     started = eventSystem.start();
     assert(started);
@@ -45,7 +45,7 @@ int main()
     }
 
     eventSystem.stop();
-    const bool stopped = process.stop();
+    [[maybe_unused]] const bool stopped = process.stop();
     assert(stopped);
 
     return 0;

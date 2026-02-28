@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <vector>
+#include <functional>
 
 #define DAP_REQUIRES_T(...) typename std::enable_if<(__VA_ARGS__), int>::type
 #define DAP_REQUIRES(...) DAP_REQUIRES_T(__VA_ARGS__) = 0
