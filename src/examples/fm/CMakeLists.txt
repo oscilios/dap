@@ -1,7 +1,7 @@
 set (target fm_synth)
 set (sources
-    main.cpp
     AudioProcess.cpp
+    main.cpp
     FMSynth.cpp
     )
 add_executable (${target} ${sources})

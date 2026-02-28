@@ -1,4 +1,5 @@
 #pragma once
+#include "base/KeyValueTuple.h"
 #include "crtp/nodes/Processor.h"
 #include "dsp/Oscillator.h"
 #include "dsp/Smoother.h"
@@ -91,5 +92,24 @@ public:
     void setGain(float g)
     {
         m_graph.input("gain"_s).input("value"_s) = g;
+    }
+    auto params()
+    {
+        using std::make_tuple;
+
+        // clang-format off
+        return dap::make_key_value_tuple(
+            make_tuple("set_carrier_frequency"_s,     &Synth::setCarrierFreq),
+            make_tuple("set_modulation_frequency"_s,  &Synth::setModFreq),
+            make_tuple("set_modulation_index"_s,      &Synth::setModIndex),
+            make_tuple("set_gain"_s,                  &Synth::setGain)
+            );
+        // clang-format on
+    }
+    template <char... Chars>
+    auto operator[](dap::constexpr_string<Chars...> key)
+    {
+        auto memberFuncPtr = params()[key];
+        return [this, memberFuncPtr](float value) { (this->*memberFuncPtr)(value); };
     }
 };

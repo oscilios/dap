@@ -31,6 +31,13 @@ int main()
 
     fm::AudioProcess process(deviceId, channelCount, bufferSize, sampleRate);
 
+    auto& synth = process.getSynth();
+
+    synth.setGain(0.25f);
+    synth.setCarrierFreq(880.f);
+    synth.setModFreq(110.f);
+    synth.setModIndex(5.25f);
+
     [[maybe_unused]] bool started = process.start();
     assert(started);
 

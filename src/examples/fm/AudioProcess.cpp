@@ -14,10 +14,6 @@ AudioProcess::AudioProcess(int32_t outputId,
 , m_outputChannelCount(outputChannelCount)
 , m_synth(bufferSize, sampleRate)
 {
-    m_synth.setGain(0.25f);
-    m_synth.setCarrierFreq(440.0f);
-    m_synth.setModFreq(110.0f);
-    m_synth.setModIndex(5.25f);
 }
 
 AudioProcess::~AudioProcess() = default;

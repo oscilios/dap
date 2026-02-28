@@ -30,9 +30,8 @@ public:
     bool start() override;
     bool stop() override;
 
-    template <char... Chars>
-    constexpr auto& operator[](dap::constexpr_string<Chars...> s)
+    Synth& getSynth()
     {
-        return m_synth[s];
+        return m_synth;
     }
 };
