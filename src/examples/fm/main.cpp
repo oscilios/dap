@@ -1,5 +1,4 @@
 #include "AudioProcess.h"
-#include "OscEventSystem.h"
 #include "audioio/AudioDeviceList.h"
 #include <cassert>
 #include <thread>
@@ -30,12 +29,16 @@ int main()
     std::cout << "deviceId: " << deviceId << " bufferSize: " << bufferSize
               << " sampleRate: " << sampleRate << " channelCount: " << channelCount << std::endl;
 
-    crtp_synth::AudioProcess process(deviceId, channelCount, bufferSize, sampleRate);
-    crtp_synth::OscEventSystem eventSystem(process);
+    fm::AudioProcess process(deviceId, channelCount, bufferSize, sampleRate);
+
+    auto& synth = process.getSynth();
+
+    synth.setGain(0.25f);
+    synth.setCarrierFreq(880.f);
+    synth.setModFreq(110.f);
+    synth.setModIndex(5.25f);
 
     [[maybe_unused]] bool started = process.start();
-    assert(started);
-    started = eventSystem.start();
     assert(started);
 
     std::cout << "press q + enter to exit....\n";
@@ -44,9 +47,9 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
-    eventSystem.stop();
     [[maybe_unused]] const bool stopped = process.stop();
     assert(stopped);
 
     return 0;
 }
+

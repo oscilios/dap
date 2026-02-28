@@ -1,5 +1,5 @@
-set (target dap_fastmath)
-set (headers
+set(target dap_fastmath)
+set(headers
     ${CMAKE_CURRENT_SOURCE_DIR}/AlignedVector.h
     ${CMAKE_CURRENT_SOURCE_DIR}/AudioBuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Taylor.h
@@ -13,12 +13,10 @@ set (headers
     ${CMAKE_CURRENT_SOURCE_DIR}/ArrayOps.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Function.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Var.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/VariableBinaryExpressions_impl.h
-    )
-add_library (${target} INTERFACE)
-target_sources (${target} INTERFACE ${headers})
-#if (NOT CMAKE_BUILD_TYPE MATCHES Release)
-    message (STATUS "EIGEN_NO_MALLOC defined")
-    target_compile_definitions (${target} INTERFACE -DEIGEN_NO_MALLOC)
-#endif ()
-add_subdirectory (test)
+    ${CMAKE_CURRENT_SOURCE_DIR}/VariableBinaryExpressions_impl.h)
+
+add_library(${target} INTERFACE)
+target_sources(${target} INTERFACE ${headers})
+target_compile_definitions(${target} INTERFACE -DEIGEN_NO_MALLOC)
+target_link_libraries(${target} INTERFACE eigen)
+add_subdirectory(test)

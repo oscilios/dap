@@ -1,7 +1,7 @@
 #ifndef DAP_OSC_OSC_MESSAGE_LOGGER_H
 #define DAP_OSC_OSC_MESSAGE_LOGGER_H
 
-#include <oscpack/osc/OscReceivedElements.h>
+#include <osc/OscReceivedElements.h>
 #include <ostream>
 #include <sstream>
 

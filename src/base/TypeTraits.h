@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <vector>
+#include <functional>
 
 #define DAP_REQUIRES_T(...) typename std::enable_if<(__VA_ARGS__), int>::type
 #define DAP_REQUIRES(...) DAP_REQUIRES_T(__VA_ARGS__) = 0
@@ -362,12 +363,6 @@ namespace dap
     constexpr bool isTuple(T)
     {
         return IsTuple<T>::value;
-    }
-
-    template <typename... Ts>
-    constexpr bool tupleSize(std::tuple<Ts...>)
-    {
-        return std::tuple_size<std::tuple<Ts...>>::value;
     }
     template <size_t size, typename... Ts>
     constexpr bool tupleSizeIs(std::tuple<Ts...>)
