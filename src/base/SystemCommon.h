@@ -7,17 +7,15 @@
 #include <stdexcept>
 #include <thread>
 #include <type_traits> // std::is_same
-#include <xmmintrin.h>
 
-//#define thread_local __thread; // osx currently does not support c++11 thread_local keyword
+// #define thread_local __thread; // osx currently does not support c++11 thread_local keyword
 
-#ifdef _WIN32
-// nothing to add
-#else
+#if defined(__SSE__) || defined(_M_X64)
 #include <cfenv>
-#include <pthread.h>
 #include <csignal>
+#include <pthread.h>
 #include <sys/signal.h>
+#include <xmmintrin.h>
 
 // flush-to-zero denormals
 #ifndef _MM_DENORMALS_ZERO_MASK
@@ -28,6 +26,8 @@
     _mm_setcsr((_mm_getcsr() & ~_MM_DENORMALS_ZERO_MASK) | (mode))
 #define _MM_GET_DENORMALS_ZERO_MODE() (_mm_getcsr() & _MM_DENORMALS_ZERO_MASK)
 #endif
+#elif defined(__arm64__)
+#include <cfenv>
 #endif
 
 #if __APPLE__
@@ -91,6 +91,7 @@ namespace dap
         cw &= ~exceptions_mask;
         ::_controlfp(cw, MCW_EM);
 #elif __APPLE__
+#if defined(__SSE__) || defined(_M_X64)
         // int excepts = FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW;
         // feraiseexcept(excepts);
         int flags = _MM_GET_EXCEPTION_MASK(); // get current flags
@@ -110,6 +111,7 @@ namespace dap
         // if (old_action.sa_handler != SIG_IGN)
         //  sigaction (SIGFPE, &new_action, NULL);
         sigaction(SIGFPE, &action, nullptr);
+#endif
 #else // linux
         int excepts = FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW;
         feenableexcept(excepts);
@@ -120,11 +122,12 @@ namespace dap
         return std::thread::hardware_concurrency();
     }
 
-    static inline void setRealtimePriority(std::thread* thread)
+    static inline void setRealtimePriority([[maybe_unused]] std::thread* thread)
     {
 #if __APPLE__
+#if defined(__SSE__) || defined(_M_X64)
         // REAL-TIME / TIME-CONSTRAINT THREAD
-        pthread_t inThread                = thread ? thread->native_handle() : pthread_self(); // NOLINT
+        pthread_t inThread = thread ? thread->native_handle() : pthread_self(); // NOLINT
         UInt64 cycleDurationInNanoseconds = 10000000;
         thread_time_constraint_policy_data_t theTCPolicy;
         UInt64 theComputeQuanta;
@@ -143,6 +146,21 @@ namespace dap
                           THREAD_TIME_CONSTRAINT_POLICY,
                           (thread_policy_t)&theTCPolicy, // NOLINT
                           THREAD_TIME_CONSTRAINT_POLICY_COUNT);
+#elif defined(__arm64__)
+        // TODO
+#endif
+#endif
+    }
+
+    static inline void flushDenormals()
+    {
+#if __APPLE__
+#if defined(__SSE__) || defined(_M_X64)
+        _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+#elif defined(__arm64__)
+        std::fesetenv(FE_DFL_DISABLE_DENORMS_ENV);
+#endif
 #endif
     }
 
