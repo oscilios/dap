@@ -12,6 +12,7 @@ set (headers
     ${CMAKE_CURRENT_SOURCE_DIR}/PwmFunctions.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Smoother.h
     ${CMAKE_CURRENT_SOURCE_DIR}/UniformDistribution.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/EnvelopeGenerator.h
     )
 add_library (${target} INTERFACE)
 target_sources (${target} INTERFACE ${headers})
