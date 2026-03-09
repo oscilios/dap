@@ -75,6 +75,16 @@ int main(int argc, char** argv)
     synth.envelope().setSustain(0.0f); // No sustain - let notes decay to silence
     synth.envelope().setRelease(0.6f); // Natural bow lift release
 
+    // Ladder filter: warm the FM tone by rolling off harsh upper harmonics
+    synth.filter().setCutoff(2200.0f); // Open enough for brightness, dark enough for warmth
+    synth.filter().setResonance(0.6f); // Slight resonance for body
+
+    // Phaser: slow sweep adds organic resonance movement, like string body
+    synth.phaser().setRate(0.6f);
+    synth.phaser().setDepth(0.4f);
+    synth.phaser().setFeedback(0.25f);
+    synth.phaser().setWet(0.3f);
+
     [[maybe_unused]] bool started = process.start();
     assert(started);
 

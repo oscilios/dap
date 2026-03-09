@@ -25,7 +25,7 @@ class dap::dsp::Phaser final
     }
     std::array<AllPass<T>, m_stageCount> m_allpass;
     Phasor<T> m_phasor;
-    T m_output;
+    T m_output{0};
 
 public:
     inline auto operator()(T input, T frequency, T depth, T feedback, T wet, T samplerate)

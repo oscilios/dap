@@ -2,8 +2,10 @@
 #include "base/KeyValueTuple.h"
 #include "crtp/nodes/Processor.h"
 #include "dsp/EnvelopeGenerator.h"
+#include "dsp/LadderFilter.h"
 #include "dsp/Mixer.h"
 #include "dsp/Oscillator.h"
+#include "dsp/Phaser.h"
 #include "dsp/Smoother.h"
 #include "fastmath/AudioBuffer.h"
 #include <cstddef>
@@ -76,9 +78,29 @@ class complex_fm::Synth final
                                    "release"_s,
                                    "samplerate"_s));
 
-        using osc_mixer_t = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t>;
+        using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t>;
+        using osc_output_t = decltype(envelope_t{} * osc_mixer_t{});
 
-        using type  = decltype(envelope_t{} * osc_mixer_t{});
+        template <typename T>
+        using filter_t =
+            decltype(processor<dap::dsp::LadderFilter<scalar_t>>::
+                         with_inputs<T, control_t, control_t, samplerate_t>::named("signal"_s,
+                                                                                   "frequency"_s,
+                                                                                   "resonance"_s,
+                                                                                   "samplerate"_s));
+
+        template <typename T>
+        using phaser_t = decltype(
+            processor<dap::dsp::Phaser<scalar_t>>::
+                with_inputs<T, control_t, control_t, control_t, control_t, samplerate_t>::named(
+                    "signal"_s,
+                    "frequency"_s,
+                    "depth"_s,
+                    "feedback"_s,
+                    "wet"_s,
+                    "samplerate"_s));
+
+        using type  = phaser_t<filter_t<osc_output_t>>;
         using shape = shape_t;
     };
 
@@ -202,17 +224,87 @@ public:
         }
     };
 
+    class Filter
+    {
+        Graph::filter_t<Graph::osc_output_t>& m_filter;
+
+    public:
+        Filter(Graph::filter_t<Graph::osc_output_t>& filter)
+        : m_filter(filter)
+        {
+        }
+
+        void setCutoff(float hz)
+        {
+            m_filter.input("frequency"_s).input("value"_s) = hz;
+        }
+        void setResonance(float r)
+        {
+            m_filter.input("resonance"_s).input("value"_s) = r;
+        }
+        void setSampleRate(float sr)
+        {
+            m_filter.input("samplerate"_s) = sr;
+        }
+    };
+
+    class PhaserControl
+    {
+        Graph::type& m_phaser;
+
+    public:
+        PhaserControl(Graph::type& phaser)
+        : m_phaser(phaser)
+        {
+        }
+
+        void setRate(float hz)
+        {
+            m_phaser.input("frequency"_s).input("value"_s) = hz;
+        }
+        void setDepth(float d)
+        {
+            m_phaser.input("depth"_s).input("value"_s) = d;
+        }
+        void setFeedback(float fb)
+        {
+            m_phaser.input("feedback"_s).input("value"_s) = fb;
+        }
+        void setWet(float w)
+        {
+            m_phaser.input("wet"_s).input("value"_s) = w;
+        }
+        void setSampleRate(float sr)
+        {
+            m_phaser.input("samplerate"_s) = sr;
+        }
+    };
+
     Synth(size_t bufferSize, float samplerate);
 
     template <size_t N>
     auto signal()
     {
-        return Operator{m_graph.input("y"_s).input<N>().input("signal"_s)};
+        return Operator{m_graph.input("signal"_s)
+                            .input("signal"_s)
+                            .input("y"_s)
+                            .input<N>()
+                            .input("signal"_s)};
     }
 
     auto envelope()
     {
-        return Envelope{m_graph.input("x"_s)};
+        return Envelope{m_graph.input("signal"_s).input("signal"_s).input("x"_s)};
+    }
+
+    auto filter()
+    {
+        return Filter{m_graph.input("signal"_s)};
+    }
+
+    auto phaser()
+    {
+        return PhaserControl{m_graph};
     }
 
     void process()
