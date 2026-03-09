@@ -97,10 +97,18 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<2>().getVibratoOp().input("frequency"_s).input("value"_s) = 6.0f;
     signal<2>().getVibratoOp().input("gain"_s).input("value"_s)      = 4.0f;
 
-    // Ladder filter: tame harsh FM harmonics
+    // Ladder filter with envelope-controlled cutoff
     filter().setSampleRate(samplerate);
-    filter().setCutoff(2200.0f);
     filter().setResonance(0.6f);
+
+    // Filter envelope: cutoff = base + filterEnv * amount
+    filterEnvelope().setSampleRate(samplerate);
+    filterEnvelope().setBase(400.0f);
+    filterEnvelope().setAmount(2200.0f);
+    filterEnvelope().setAttack(0.12f);
+    filterEnvelope().setDecay(2.0f);
+    filterEnvelope().setSustain(0.0f);
+    filterEnvelope().setRelease(0.5f);
 
     // Phaser: organic body movement for string character
     phaser().setSampleRate(samplerate);

@@ -81,13 +81,17 @@ class complex_fm::Synth final
         using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t>;
         using osc_output_t = decltype(envelope_t{} * osc_mixer_t{});
 
+        // Filter cutoff: base + filterEnv * amount
+        using filter_env_freq_t = decltype(control_t{} + envelope_t{} * control_t{});
+
         template <typename T>
         using filter_t =
             decltype(processor<dap::dsp::LadderFilter<scalar_t>>::
-                         with_inputs<T, control_t, control_t, samplerate_t>::named("signal"_s,
-                                                                                   "frequency"_s,
-                                                                                   "resonance"_s,
-                                                                                   "samplerate"_s));
+                         with_inputs<T, filter_env_freq_t, control_t, samplerate_t>::named(
+                             "signal"_s,
+                             "frequency"_s,
+                             "resonance"_s,
+                             "samplerate"_s));
 
         template <typename T>
         using phaser_t = decltype(
@@ -106,44 +110,59 @@ class complex_fm::Synth final
 
     using buffer_t = dap::fastmath::AudioBuffer<float>;
 
-    buffer_t m_output;
+    buffer_t    m_output;
     Graph::type m_graph;
 
 public:
+    // Amplitude envelope — setGate also triggers the filter envelope
     class Envelope
     {
-        Graph::envelope_t& m_env;
+        Graph::envelope_t& m_ampEnv;
+        Graph::envelope_t& m_filterEnv;
 
     public:
-        Envelope(Graph::envelope_t& env)
-        : m_env(env)
+        Envelope(Graph::envelope_t& ampEnv, Graph::envelope_t& filterEnv)
+        : m_ampEnv(ampEnv)
+        , m_filterEnv(filterEnv)
         {
         }
 
         void setGate(float gate)
         {
-            m_env.input("gate"_s) = gate;
+            m_ampEnv.input("gate"_s)    = gate;
+            m_filterEnv.input("gate"_s) = gate;
         }
-        void setAttack(float attackTime)
+        void setAttack(float t) { m_ampEnv.input("attack"_s) = t; }
+        void setDecay(float t) { m_ampEnv.input("decay"_s) = t; }
+        void setSustain(float s) { m_ampEnv.input("sustain"_s) = s; }
+        void setRelease(float t) { m_ampEnv.input("release"_s) = t; }
+        void setSampleRate(float sr) { m_ampEnv.input("samplerate"_s) = sr; }
+    };
+
+    // Filter envelope — controls cutoff: frequency = base + filterEnv * amount
+    class FilterEnvelope
+    {
+        Graph::envelope_t& m_env;
+        Graph::control_t&  m_base;
+        Graph::control_t&  m_amount;
+
+    public:
+        FilterEnvelope(Graph::envelope_t& env,
+                       Graph::control_t&  base,
+                       Graph::control_t&  amount)
+        : m_env(env)
+        , m_base(base)
+        , m_amount(amount)
         {
-            m_env.input("attack"_s) = attackTime;
         }
-        void setDecay(float decayTime)
-        {
-            m_env.input("decay"_s) = decayTime;
-        }
-        void setSustain(float sustainLevel)
-        {
-            m_env.input("sustain"_s) = sustainLevel;
-        }
-        void setRelease(float releaseTime)
-        {
-            m_env.input("release"_s) = releaseTime;
-        }
-        void setSampleRate(float sr)
-        {
-            m_env.input("samplerate"_s) = sr;
-        }
+
+        void setAttack(float t) { m_env.input("attack"_s) = t; }
+        void setDecay(float t) { m_env.input("decay"_s) = t; }
+        void setSustain(float s) { m_env.input("sustain"_s) = s; }
+        void setRelease(float t) { m_env.input("release"_s) = t; }
+        void setSampleRate(float sr) { m_env.input("samplerate"_s) = sr; }
+        void setBase(float hz) { m_base.input("value"_s) = hz; }
+        void setAmount(float hz) { m_amount.input("value"_s) = hz; }
     };
 
     class Operator
@@ -177,10 +196,7 @@ public:
             return m_op.input("frequency"_s).input("y"_s);
         }
 
-        void setFreq(float hz)
-        {
-            getFreq() = hz;
-        }
+        void setFreq(float hz) { getFreq() = hz; }
         void setCarrierLevel(float level)
         {
             m_op.input("gain"_s).input("x"_s).input("value"_s) = level;
@@ -210,18 +226,9 @@ public:
             getFreqOp().input("gain"_s).input("value"_s) =
                 getFreqOp().input("frequency"_s).input("value"_s) * idx;
         }
-        void setSampleRate(float sr)
-        {
-            m_op.input("samplerate"_s) = sr;
-        }
-        void setShape(Graph::shape s)
-        {
-            m_op.input("shape"_s) = s;
-        }
-        void setPhase(float p)
-        {
-            m_op.input("phase"_s).input("value"_s) = p;
-        }
+        void setSampleRate(float sr) { m_op.input("samplerate"_s) = sr; }
+        void setShape(Graph::shape s) { m_op.input("shape"_s) = s; }
+        void setPhase(float p) { m_op.input("phase"_s).input("value"_s) = p; }
     };
 
     class Filter
@@ -234,10 +241,6 @@ public:
         {
         }
 
-        void setCutoff(float hz)
-        {
-            m_filter.input("frequency"_s).input("value"_s) = hz;
-        }
         void setResonance(float r)
         {
             m_filter.input("resonance"_s).input("value"_s) = r;
@@ -258,26 +261,11 @@ public:
         {
         }
 
-        void setRate(float hz)
-        {
-            m_phaser.input("frequency"_s).input("value"_s) = hz;
-        }
-        void setDepth(float d)
-        {
-            m_phaser.input("depth"_s).input("value"_s) = d;
-        }
-        void setFeedback(float fb)
-        {
-            m_phaser.input("feedback"_s).input("value"_s) = fb;
-        }
-        void setWet(float w)
-        {
-            m_phaser.input("wet"_s).input("value"_s) = w;
-        }
-        void setSampleRate(float sr)
-        {
-            m_phaser.input("samplerate"_s) = sr;
-        }
+        void setRate(float hz) { m_phaser.input("frequency"_s).input("value"_s) = hz; }
+        void setDepth(float d) { m_phaser.input("depth"_s).input("value"_s) = d; }
+        void setFeedback(float fb) { m_phaser.input("feedback"_s).input("value"_s) = fb; }
+        void setWet(float w) { m_phaser.input("wet"_s).input("value"_s) = w; }
+        void setSampleRate(float sr) { m_phaser.input("samplerate"_s) = sr; }
     };
 
     Synth(size_t bufferSize, float samplerate);
@@ -294,7 +282,18 @@ public:
 
     auto envelope()
     {
-        return Envelope{m_graph.input("signal"_s).input("signal"_s).input("x"_s)};
+        // amplitude envelope (x side of multiply) and filter envelope (inside filter freq node)
+        return Envelope{
+            m_graph.input("signal"_s).input("signal"_s).input("x"_s),
+            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s)};
+    }
+
+    auto filterEnvelope()
+    {
+        return FilterEnvelope{
+            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
+            m_graph.input("signal"_s).input("frequency"_s).input("x"_s),
+            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("y"_s)};
     }
 
     auto filter()
