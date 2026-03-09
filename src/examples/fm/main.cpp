@@ -2,6 +2,7 @@
 #include "audioio/AudioDeviceList.h"
 #include <cassert>
 #include <thread>
+#include <iostream>
 
 using namespace dap::audioio;
 
@@ -35,17 +36,10 @@ int main()
 
     synth.setGain(0.25f);
 
-    //synth.setCarrierFreq(523.25f);
-    //synth.setModFreq(523.25f);
-    //synth.setModIndex(1.2f);
-
     synth.setCarrierFreq(349.23f);
     synth.setModFreq(523.25f);
     synth.setModIndex(1.5f);
 
-    //synth.setCarrierFreq(440.0f);
-    //synth.setModFreq(880.0f);
-    //synth.setModIndex(0.7f);
 
     [[maybe_unused]] bool started = process.start();
     assert(started);

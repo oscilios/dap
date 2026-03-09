@@ -1,7 +1,6 @@
 #ifndef DAP_BASE_SYSTEM_COMMON_H
 #define DAP_BASE_SYSTEM_COMMON_H
 
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -76,7 +75,6 @@ namespace dap
                 ss << "Unknown";
                 break;
         }
-        std::cerr << ss.str() << std::endl;
         throw std::runtime_error(ss.str());
         // exit(-1);
     }
