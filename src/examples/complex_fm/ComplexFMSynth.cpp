@@ -6,6 +6,8 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<0>().input("gain"_s).input("value"_s) = 0.8f; // op1 gain
     m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<1>().input("gain"_s).input("value"_s) = 0.6f; // op2 gain
     m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<2>().input("gain"_s).input("value"_s) = 0.4f; // op3 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<3>().input("gain"_s).input("value"_s) = 0.3f; // op4 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<4>().input("gain"_s).input("value"_s) = 0.2f; // op5 gain
 
     signal<0>().getFreqPortamentoDuration() = 512;
     signal<1>().getFreqPortamentoDuration() = 512;
@@ -96,6 +98,52 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<2>().getVibratoOp().input("phase"_s).input("value"_s)     = 0.0f;
     signal<2>().getVibratoOp().input("frequency"_s).input("value"_s) = 6.0f;
     signal<2>().getVibratoOp().input("gain"_s).input("value"_s)      = 4.0f;
+
+    // Operator 4 (4th harmonic)
+    signal<3>().getFreq() = 220.0f;
+    signal<3>().setCarrierLevel(0.2f);
+    signal<3>().setModFreq(signal<3>().getFreq() * 2.0f);
+    signal<3>().setModIdx(5.0f);
+    signal<3>().setSampleRate(samplerate);
+    signal<3>().setShape(Graph::shape::Sine);
+    signal<3>().setPhase(0.0f);
+    signal<3>().getFreqOp().input("samplerate"_s)             = samplerate;
+    signal<3>().getFreqOp().input("shape"_s)                  = Graph::shape::Sine;
+    signal<3>().getFreqOp().input("phase"_s).input("value"_s) = 0.0f;
+    signal<3>().getGainOp().input("samplerate"_s)                 = samplerate;
+    signal<3>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
+    signal<3>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
+    signal<3>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
+    signal<3>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<3>().getVibratoOp().input("samplerate"_s)                 = samplerate;
+    signal<3>().getVibratoOp().input("shape"_s)                      = Graph::shape::Sine;
+    signal<3>().getVibratoOp().input("phase"_s).input("value"_s)     = 0.0f;
+    signal<3>().getVibratoOp().input("frequency"_s).input("value"_s) = 6.0f;
+    signal<3>().getVibratoOp().input("gain"_s).input("value"_s)      = 4.0f;
+    signal<3>().getFreqPortamentoDuration()                           = 512;
+
+    // Operator 5 (5th harmonic)
+    signal<4>().getFreq() = 220.0f;
+    signal<4>().setCarrierLevel(0.15f);
+    signal<4>().setModFreq(signal<4>().getFreq() * 2.0f);
+    signal<4>().setModIdx(5.0f);
+    signal<4>().setSampleRate(samplerate);
+    signal<4>().setShape(Graph::shape::Sine);
+    signal<4>().setPhase(0.0f);
+    signal<4>().getFreqOp().input("samplerate"_s)             = samplerate;
+    signal<4>().getFreqOp().input("shape"_s)                  = Graph::shape::Sine;
+    signal<4>().getFreqOp().input("phase"_s).input("value"_s) = 0.0f;
+    signal<4>().getGainOp().input("samplerate"_s)                 = samplerate;
+    signal<4>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
+    signal<4>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
+    signal<4>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
+    signal<4>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<4>().getVibratoOp().input("samplerate"_s)                 = samplerate;
+    signal<4>().getVibratoOp().input("shape"_s)                      = Graph::shape::Sine;
+    signal<4>().getVibratoOp().input("phase"_s).input("value"_s)     = 0.0f;
+    signal<4>().getVibratoOp().input("frequency"_s).input("value"_s) = 6.0f;
+    signal<4>().getVibratoOp().input("gain"_s).input("value"_s)      = 4.0f;
+    signal<4>().getFreqPortamentoDuration()                           = 512;
 
     // Ladder filter with envelope-controlled cutoff
     filter().setSampleRate(samplerate);

@@ -78,7 +78,7 @@ class complex_fm::Synth final
                                    "release"_s,
                                    "samplerate"_s));
 
-        using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t>;
+        using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t>;
         using osc_output_t = decltype(envelope_t{} * osc_mixer_t{});
 
         // Filter cutoff: base + filterEnv * amount
