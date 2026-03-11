@@ -107,6 +107,18 @@ int main(int argc, char** argv)
     synth.filterEnvelope().setSustain(0.0f);
     synth.filterEnvelope().setRelease(0.12f);
 
+    // FM envelope: extra FM modulation at note onset, decays naturally
+    synth.fmEnvelope().setAttack(0.01f);
+    synth.fmEnvelope().setDecay(0.15f);
+    synth.fmEnvelope().setSustain(0.0f);
+    synth.fmEnvelope().setRelease(0.1f);
+    // Per-operator FM burst amounts (higher harmonics get less)
+    synth.signal<0>().setFMEnvAmount(1200.0f);
+    synth.signal<1>().setFMEnvAmount(800.0f);
+    synth.signal<2>().setFMEnvAmount(600.0f);
+    synth.signal<3>().setFMEnvAmount(400.0f);
+    synth.signal<4>().setFMEnvAmount(300.0f);
+
     // Noise: subtle bow hair texture
     synth.noise().setGain(0.09f);
 
@@ -169,8 +181,24 @@ int main(int argc, char** argv)
         synth.signal<4>().setVibratoRate(6.8f * freqMultiplier);
         synth.signal<4>().setModIdx(1.2f / sqrt(freqMultiplier));
 
-        // Hold note, then quick bow-lift release
-        std::this_thread::sleep_for(std::chrono::milliseconds(durationMs - 200));
+        // Initial vibrato swell: wide vibrato at bow contact, then settle
+        synth.signal<0>().setVibratoDepth(0.8f);
+        synth.signal<1>().setVibratoDepth(0.7f);
+        synth.signal<2>().setVibratoDepth(0.5f);
+        synth.signal<3>().setVibratoDepth(0.4f);
+        synth.signal<4>().setVibratoDepth(0.3f);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(350));
+
+        // Settle to normal vibrato depths
+        synth.signal<0>().setVibratoDepth(0.2f);
+        synth.signal<1>().setVibratoDepth(0.18f);
+        synth.signal<2>().setVibratoDepth(0.14f);
+        synth.signal<3>().setVibratoDepth(0.1f);
+        synth.signal<4>().setVibratoDepth(0.08f);
+
+        // Hold remaining note, then quick bow-lift release
+        std::this_thread::sleep_for(std::chrono::milliseconds(durationMs - 200 - 350));
 
         synth.envelope().setGate(0.0f);
         std::this_thread::sleep_for(std::chrono::milliseconds(200));

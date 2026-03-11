@@ -10,6 +10,7 @@
 #include "dsp/UniformDistribution.h"
 #include "dsp/Smoother.h"
 #include "fastmath/AudioBuffer.h"
+#include <array>
 #include <cstddef>
 
 namespace complex_fm
@@ -56,7 +57,20 @@ class complex_fm::Synth final
         using vibrato_mod_t = portamento_mod_control_t;
         using amp_mod_t     = mod_control_t;
 
-        using fm_vib_mod_t = decltype(vibrato_mod_t{} + control_osc_t{});
+        using envelope_t =
+            decltype(processor<dap::dsp::EnvelopeGenerator<scalar_t>>::
+                         with_inputs<scalar_t, scalar_t, scalar_t, scalar_t, scalar_t, scalar_t>::
+                             named("gate"_s,
+                                   "attack"_s,
+                                   "decay"_s,
+                                   "sustain"_s,
+                                   "release"_s,
+                                   "samplerate"_s));
+
+        // FM modulator with envelope-controlled gain: base + fmEnv * amount
+        using fm_env_gain_t = decltype(control_t{} + envelope_t{} * control_t{});
+        using fm_mod_osc_t  = osc_t<fm_env_gain_t, control_t, control_t>;
+        using fm_vib_mod_t  = decltype(vibrato_mod_t{} + fm_mod_osc_t{});
 
         // fm oscillator
         using fm_osc_t = osc_t<amp_mod_t, fm_vib_mod_t, control_t>;
@@ -69,16 +83,6 @@ class complex_fm::Synth final
         template <typename... Ts>
         using mixer_t =
             decltype(processor<dap::dsp::Mixer>::with_inputs<bus_t<Ts>...>::prefixed_by("bus_"_s));
-
-        using envelope_t =
-            decltype(processor<dap::dsp::EnvelopeGenerator<scalar_t>>::
-                         with_inputs<scalar_t, scalar_t, scalar_t, scalar_t, scalar_t, scalar_t>::
-                             named("gate"_s,
-                                   "attack"_s,
-                                   "decay"_s,
-                                   "sustain"_s,
-                                   "release"_s,
-                                   "samplerate"_s));
 
         // Noise generator as 6th mixer bus
         using noise_gen_t = dap::dsp::NoiseGenerator<dap::dsp::UniformDistribution>;
@@ -120,16 +124,19 @@ class complex_fm::Synth final
     Graph::type m_graph;
 
 public:
-    // Amplitude envelope — setGate also triggers the filter envelope
+    // Amplitude envelope — setGate also triggers the filter and FM envelopes
     class Envelope
     {
         Graph::envelope_t& m_ampEnv;
         Graph::envelope_t& m_filterEnv;
+        std::array<Graph::envelope_t*, 5> m_fmEnvs;
 
     public:
-        Envelope(Graph::envelope_t& ampEnv, Graph::envelope_t& filterEnv)
+        Envelope(Graph::envelope_t& ampEnv, Graph::envelope_t& filterEnv,
+                 std::array<Graph::envelope_t*, 5> fmEnvs)
         : m_ampEnv(ampEnv)
         , m_filterEnv(filterEnv)
+        , m_fmEnvs(fmEnvs)
         {
         }
 
@@ -137,6 +144,8 @@ public:
         {
             m_ampEnv.input("gate"_s)    = gate;
             m_filterEnv.input("gate"_s) = gate;
+            for (auto* env : m_fmEnvs)
+                env->input("gate"_s) = gate;
         }
         void setAttack(float t) { m_ampEnv.input("attack"_s) = t; }
         void setDecay(float t) { m_ampEnv.input("decay"_s) = t; }
@@ -169,6 +178,24 @@ public:
         void setSampleRate(float sr) { m_env.input("samplerate"_s) = sr; }
         void setBase(float hz) { m_base.input("value"_s) = hz; }
         void setAmount(float hz) { m_amount.input("value"_s) = hz; }
+    };
+
+    // FM envelope — controls FM modulation depth: fm_gain = base + fmEnv * amount
+    class FMEnvelope
+    {
+        std::array<Graph::envelope_t*, 5> m_envs;
+
+    public:
+        FMEnvelope(std::array<Graph::envelope_t*, 5> envs)
+        : m_envs(envs)
+        {
+        }
+
+        void setAttack(float t) { for (auto* e : m_envs) e->input("attack"_s) = t; }
+        void setDecay(float t) { for (auto* e : m_envs) e->input("decay"_s) = t; }
+        void setSustain(float s) { for (auto* e : m_envs) e->input("sustain"_s) = s; }
+        void setRelease(float t) { for (auto* e : m_envs) e->input("release"_s) = t; }
+        void setSampleRate(float sr) { for (auto* e : m_envs) e->input("samplerate"_s) = sr; }
     };
 
     class Operator
@@ -229,8 +256,12 @@ public:
         }
         void setModIdx(float idx)
         {
-            getFreqOp().input("gain"_s).input("value"_s) =
+            getFreqOp().input("gain"_s).input("x"_s).input("value"_s) =
                 getFreqOp().input("frequency"_s).input("value"_s) * idx;
+        }
+        void setFMEnvAmount(float amount)
+        {
+            getFreqOp().input("gain"_s).input("y"_s).input("y"_s).input("value"_s) = amount;
         }
         void setSampleRate(float sr) { m_op.input("samplerate"_s) = sr; }
         void setShape(Graph::shape s) { m_op.input("shape"_s) = s; }
@@ -286,12 +317,29 @@ public:
                             .input("signal"_s)};
     }
 
+    auto fmEnvPtrs()
+    {
+        auto& mixer = m_graph.input("signal"_s).input("signal"_s).input("y"_s);
+        return std::array<Graph::envelope_t*, 5>{
+            &mixer.input<0>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
+            &mixer.input<1>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
+            &mixer.input<2>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
+            &mixer.input<3>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
+            &mixer.input<4>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s)};
+    }
+
     auto envelope()
     {
-        // amplitude envelope (x side of multiply) and filter envelope (inside filter freq node)
+        // amplitude envelope (x side of multiply), filter envelope, and FM envelopes
         return Envelope{
             m_graph.input("signal"_s).input("signal"_s).input("x"_s),
-            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s)};
+            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
+            fmEnvPtrs()};
+    }
+
+    auto fmEnvelope()
+    {
+        return FMEnvelope{fmEnvPtrs()};
     }
 
     auto filterEnvelope()

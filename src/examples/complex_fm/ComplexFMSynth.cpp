@@ -159,6 +159,20 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     filterEnvelope().setSustain(0.0f);
     filterEnvelope().setRelease(0.5f);
 
+    // FM envelope: extra FM at note onset that decays
+    fmEnvelope().setSampleRate(samplerate);
+    fmEnvelope().setAttack(0.01f);
+    fmEnvelope().setDecay(0.6f);
+    fmEnvelope().setSustain(0.0f);
+    fmEnvelope().setRelease(0.1f);
+
+    // Per-operator FM envelope amounts (0 by default, set in main)
+    signal<0>().setFMEnvAmount(0.0f);
+    signal<1>().setFMEnvAmount(0.0f);
+    signal<2>().setFMEnvAmount(0.0f);
+    signal<3>().setFMEnvAmount(0.0f);
+    signal<4>().setFMEnvAmount(0.0f);
+
     // Phaser: organic body movement for string character
     phaser().setSampleRate(samplerate);
     phaser().setRate(0.6f);
