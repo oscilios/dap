@@ -107,6 +107,9 @@ int main(int argc, char** argv)
     synth.filterEnvelope().setSustain(0.0f);
     synth.filterEnvelope().setRelease(0.12f);
 
+    // Noise: subtle bow hair texture
+    synth.noise().setGain(0.09f);
+
     // Phaser: slow sweep adds organic resonance movement, like string body
     synth.phaser().setRate(0.6f);
     synth.phaser().setDepth(0.4f);

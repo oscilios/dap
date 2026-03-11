@@ -4,8 +4,10 @@
 #include "dsp/EnvelopeGenerator.h"
 #include "dsp/LadderFilter.h"
 #include "dsp/Mixer.h"
+#include "dsp/NoiseGenerator.h"
 #include "dsp/Oscillator.h"
 #include "dsp/Phaser.h"
+#include "dsp/UniformDistribution.h"
 #include "dsp/Smoother.h"
 #include "fastmath/AudioBuffer.h"
 #include <cstddef>
@@ -78,7 +80,11 @@ class complex_fm::Synth final
                                    "release"_s,
                                    "samplerate"_s));
 
-        using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t>;
+        // Noise generator as 6th mixer bus
+        using noise_gen_t = dap::dsp::NoiseGenerator<dap::dsp::UniformDistribution>;
+        using noise_t     = decltype(processor<noise_gen_t>::with_inputs<control_t, noise_gen_t::Color>::named("gain"_s, "color"_s));
+
+        using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t, noise_t>;
         using osc_output_t = decltype(envelope_t{} * osc_mixer_t{});
 
         // Filter cutoff: base + filterEnv * amount
@@ -304,6 +310,25 @@ public:
     auto phaser()
     {
         return PhaserControl{m_graph};
+    }
+
+    class Noise
+    {
+        Graph::noise_t& m_noise;
+
+    public:
+        Noise(Graph::noise_t& noise)
+        : m_noise(noise)
+        {
+        }
+
+        void setGain(float g) { m_noise.input("gain"_s).input("value"_s) = g; }
+        void setColor(Graph::noise_gen_t::Color c) { m_noise.input("color"_s) = c; }
+    };
+
+    auto noise()
+    {
+        return Noise{m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("signal"_s)};
     }
 
     void process()

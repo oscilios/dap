@@ -3,11 +3,12 @@
 complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
 : m_output(1, bufferSize)
 {
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<0>().input("gain"_s).input("value"_s) = 0.8f; // op1 gain
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<1>().input("gain"_s).input("value"_s) = 0.6f; // op2 gain
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<2>().input("gain"_s).input("value"_s) = 0.4f; // op3 gain
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<3>().input("gain"_s).input("value"_s) = 0.3f; // op4 gain
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<4>().input("gain"_s).input("value"_s) = 0.2f; // op5 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<0>().input("gain"_s).input("value"_s) = 0.6f; // op1 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<1>().input("gain"_s).input("value"_s) = 0.4f; // op2 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<2>().input("gain"_s).input("value"_s) = 0.3f; // op3 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<3>().input("gain"_s).input("value"_s) = 0.2f; // op4 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<4>().input("gain"_s).input("value"_s) = 0.1f; // op5 gain
+    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("gain"_s).input("value"_s) = 0.5f; // noise bus gain
 
     signal<0>().getFreqPortamentoDuration() = 512;
     signal<1>().getFreqPortamentoDuration() = 512;
@@ -164,4 +165,8 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     phaser().setDepth(0.4f);
     phaser().setFeedback(0.25f);
     phaser().setWet(0.3f);
+
+    // Noise: bow attack transient (gain starts at 0, triggered per note)
+    noise().setGain(0.0f);
+    noise().setColor(Graph::noise_gen_t::Color::OneOverF3);
 }
