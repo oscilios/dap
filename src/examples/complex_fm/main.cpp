@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
     // below it's AI assisted code
 
-    // Fundamental: More dynamic but harmonically stable
+    // Fundamental (1st harmonic, odd)
     synth.signal<0>().setCarrierLevel(0.7f);       // Strong fundamental
     synth.signal<0>().setAmplitudeModRate(0.8f);   // Moderate breathing
     synth.signal<0>().setAmplitudeModDepth(0.15f); // Dynamic but controlled
@@ -46,10 +46,10 @@ int main(int argc, char** argv)
     synth.signal<0>().setModFreq(freq);            // Harmonic modulation
     synth.signal<0>().setModIdx(3.0f);             // Moderate FM for character
 
-    // Signal 1: Octave with subtle character
-    auto freq1 = freq * 2.0f + 1.5f; // Octave + detuning
+    // Signal 1: 2nd harmonic (even, suppressed for string character)
+    auto freq1 = freq * 2.0f + 1.5f;
     synth.signal<1>().setFreq(freq1);
-    synth.signal<1>().setCarrierLevel(0.4f);       // Moderate octave presence
+    synth.signal<1>().setCarrierLevel(0.2f);       // Reduced even harmonic
     synth.signal<1>().setAmplitudeModRate(1.0f);   // Different breathing rate
     synth.signal<1>().setAmplitudeModDepth(0.18f); // Dynamic variation
     synth.signal<1>().setVibratoRate(6.1f);        // Slightly different vibrato
@@ -57,10 +57,10 @@ int main(int argc, char** argv)
     synth.signal<1>().setModFreq(freq1);           // Harmonic modulation
     synth.signal<1>().setModIdx(2.5f);             // Moderate FM for texture
 
-    // Signal 2: Third harmonic
+    // Signal 2: 3rd harmonic (odd, boosted for string character)
     auto freq2 = freq * 3.0f + 2.5f;
     synth.signal<2>().setFreq(freq2);
-    synth.signal<2>().setCarrierLevel(0.25f);     // Subtle high frequency presence
+    synth.signal<2>().setCarrierLevel(0.3f);      // Boosted odd harmonic
     synth.signal<2>().setAmplitudeModRate(1.3f);  // Moderate shimmer for brightness
     synth.signal<2>().setAmplitudeModDepth(0.2f); // Controlled timbral movement
     synth.signal<2>().setVibratoRate(6.4f);       // Different vibrato rate
@@ -68,10 +68,10 @@ int main(int argc, char** argv)
     synth.signal<2>().setModFreq(freq2);          // Harmonic modulation
     synth.signal<2>().setModIdx(2.0f);            // Gentle FM for high frequency texture
 
-    // Signal 3: 4th harmonic
+    // Signal 3: 4th harmonic (even, strongly suppressed)
     auto freq3 = freq * 4.0f + 3.5f;
     synth.signal<3>().setFreq(freq3);
-    synth.signal<3>().setCarrierLevel(0.2f);
+    synth.signal<3>().setCarrierLevel(0.08f);
     synth.signal<3>().setAmplitudeModRate(1.6f);
     synth.signal<3>().setAmplitudeModDepth(0.15f);
     synth.signal<3>().setVibratoRate(6.6f);
@@ -79,10 +79,10 @@ int main(int argc, char** argv)
     synth.signal<3>().setModFreq(freq3);
     synth.signal<3>().setModIdx(1.5f);
 
-    // Signal 4: 5th harmonic
+    // Signal 4: 5th harmonic (odd, present but rolled off)
     auto freq4 = freq * 5.0f + 4.5f;
     synth.signal<4>().setFreq(freq4);
-    synth.signal<4>().setCarrierLevel(0.15f);
+    synth.signal<4>().setCarrierLevel(0.12f);
     synth.signal<4>().setAmplitudeModRate(1.9f);
     synth.signal<4>().setAmplitudeModDepth(0.12f);
     synth.signal<4>().setVibratoRate(6.8f);
