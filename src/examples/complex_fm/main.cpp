@@ -107,17 +107,23 @@ int main(int argc, char** argv)
     synth.filterEnvelope().setSustain(0.0f);
     synth.filterEnvelope().setRelease(0.12f);
 
-    // FM envelope: extra FM modulation at note onset, decays naturally
-    synth.fmEnvelope().setAttack(0.01f);
-    synth.fmEnvelope().setDecay(0.15f);
-    synth.fmEnvelope().setSustain(0.0f);
-    synth.fmEnvelope().setRelease(0.1f);
+    // Attack envelope: FM + AM burst at note onset, decays naturally
+    synth.attackEnvelope().setAttack(0.01f);
+    synth.attackEnvelope().setDecay(0.15f);
+    synth.attackEnvelope().setSustain(0.0f);
+    synth.attackEnvelope().setRelease(0.1f);
     // Per-operator FM burst amounts (higher harmonics get less)
-    synth.signal<0>().setFMEnvAmount(1200.0f);
-    synth.signal<1>().setFMEnvAmount(800.0f);
-    synth.signal<2>().setFMEnvAmount(600.0f);
-    synth.signal<3>().setFMEnvAmount(400.0f);
-    synth.signal<4>().setFMEnvAmount(300.0f);
+    synth.signal<0>().setFMEnvAmount(1800.0f);
+    synth.signal<1>().setFMEnvAmount(1200.0f);
+    synth.signal<2>().setFMEnvAmount(900.0f);
+    synth.signal<3>().setFMEnvAmount(600.0f);
+    synth.signal<4>().setFMEnvAmount(450.0f);
+    // Per-operator AM burst amounts (tremolo at note onset)
+    synth.signal<0>().setAMEnvAmount(0.15f);
+    synth.signal<1>().setAMEnvAmount(0.12f);
+    synth.signal<2>().setAMEnvAmount(0.1f);
+    synth.signal<3>().setAMEnvAmount(0.08f);
+    synth.signal<4>().setAMEnvAmount(0.06f);
 
     // Noise: subtle bow hair texture
     synth.noise().setGain(0.09f);

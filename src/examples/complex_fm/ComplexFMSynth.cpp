@@ -33,7 +33,7 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<0>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<0>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
     signal<0>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
-    signal<0>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<0>().getGainOp().input("gain"_s).input("x"_s).input("value"_s)      = 0.2f;
 
     // Vibrato LFO (slow modulation for expression)
     signal<0>().getVibratoOp().input("samplerate"_s)                 = samplerate;
@@ -62,7 +62,7 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<1>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<1>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
     signal<1>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
-    signal<1>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<1>().getGainOp().input("gain"_s).input("x"_s).input("value"_s)      = 0.2f;
 
     // Vibrato LFO (slow modulation for expression)
     signal<1>().getVibratoOp().input("samplerate"_s)                 = samplerate;
@@ -91,7 +91,7 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<2>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<2>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
     signal<2>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
-    signal<2>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<2>().getGainOp().input("gain"_s).input("x"_s).input("value"_s)      = 0.2f;
 
     // Vibrato LFO (slow modulation for expression)
     signal<2>().getVibratoOp().input("samplerate"_s)                 = samplerate;
@@ -115,7 +115,7 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<3>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<3>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
     signal<3>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
-    signal<3>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<3>().getGainOp().input("gain"_s).input("x"_s).input("value"_s)      = 0.2f;
     signal<3>().getVibratoOp().input("samplerate"_s)                 = samplerate;
     signal<3>().getVibratoOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<3>().getVibratoOp().input("phase"_s).input("value"_s)     = 0.0f;
@@ -138,7 +138,7 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     signal<4>().getGainOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<4>().getGainOp().input("phase"_s).input("value"_s)     = 0.0f;
     signal<4>().getGainOp().input("frequency"_s).input("value"_s) = 0.3f;
-    signal<4>().getGainOp().input("gain"_s).input("value"_s)      = 0.2f;
+    signal<4>().getGainOp().input("gain"_s).input("x"_s).input("value"_s)      = 0.2f;
     signal<4>().getVibratoOp().input("samplerate"_s)                 = samplerate;
     signal<4>().getVibratoOp().input("shape"_s)                      = Graph::shape::Sine;
     signal<4>().getVibratoOp().input("phase"_s).input("value"_s)     = 0.0f;
@@ -159,19 +159,24 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     filterEnvelope().setSustain(0.0f);
     filterEnvelope().setRelease(0.5f);
 
-    // FM envelope: extra FM at note onset that decays
-    fmEnvelope().setSampleRate(samplerate);
-    fmEnvelope().setAttack(0.01f);
-    fmEnvelope().setDecay(0.6f);
-    fmEnvelope().setSustain(0.0f);
-    fmEnvelope().setRelease(0.1f);
+    // Attack envelope: shared ADSR for FM and AM burst at note onset
+    attackEnvelope().setSampleRate(samplerate);
+    attackEnvelope().setAttack(0.01f);
+    attackEnvelope().setDecay(0.6f);
+    attackEnvelope().setSustain(0.0f);
+    attackEnvelope().setRelease(0.1f);
 
-    // Per-operator FM envelope amounts (0 by default, set in main)
+    // Per-operator FM and AM envelope amounts (0 by default, set in main)
     signal<0>().setFMEnvAmount(0.0f);
     signal<1>().setFMEnvAmount(0.0f);
     signal<2>().setFMEnvAmount(0.0f);
     signal<3>().setFMEnvAmount(0.0f);
     signal<4>().setFMEnvAmount(0.0f);
+    signal<0>().setAMEnvAmount(0.0f);
+    signal<1>().setAMEnvAmount(0.0f);
+    signal<2>().setAMEnvAmount(0.0f);
+    signal<3>().setAMEnvAmount(0.0f);
+    signal<4>().setAMEnvAmount(0.0f);
 
     // Phaser: organic body movement for string character
     phaser().setSampleRate(samplerate);
