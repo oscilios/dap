@@ -20,7 +20,7 @@ class dap::dsp::AllPass final
 public:
     inline auto operator()(T input, T frequency, T samplerate)
     {
-        const T w = std::tan(M_PI * frequency / samplerate);
+        const T w = std::tan(T(M_PI) * frequency / samplerate);
         const T k = (w - T(1)) / (w + T(1));
 
         m_output = k * input + m_d;

@@ -1,7 +1,6 @@
 #ifndef DAP_DSP_UNIFORM_DISTRIBUTION_H
 #define DAP_DSP_UNIFORM_DISTRIBUTION_H
 
-#include <map>
 #include <random>
 
 namespace dap
@@ -15,20 +14,18 @@ namespace dap
 class dap::dsp::UniformDistribution final
 {
     std::mt19937 m_generator;
-    std::uniform_int_distribution<> m_distribution;
+    std::uniform_real_distribution<float> m_distribution;
 
 public:
     using value_type = float;
     UniformDistribution()
     : m_generator(std::random_device()())
-    , m_distribution(0, RAND_MAX)
+    , m_distribution(-1.0f, 1.0f)
     {
-        std::srand(std::time(0));
     }
     inline auto operator()()
     {
-        static constexpr value_type factor(2.0f / (RAND_MAX + 1.0f));
-        return m_distribution(m_generator) * factor - 1.0f;
+        return m_distribution(m_generator);
     }
 };
 

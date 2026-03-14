@@ -18,7 +18,7 @@ template <typename T>
 class dap::dsp::Phaser final
 {
     static constexpr int m_stageCount{6};
-    constexpr auto freqs(int i)
+    static constexpr auto freqs(int i)
     {
         constexpr std::array<T, m_stageCount> f{{T(16), T(33), T(48), T(98), T(160), T(260)}};
         return f[i];
