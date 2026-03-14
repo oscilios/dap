@@ -3,12 +3,12 @@
 complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
 : m_output(1, bufferSize)
 {
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<0>().input("gain"_s).input("value"_s) = 0.7f;  // 1st harmonic (odd)
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<1>().input("gain"_s).input("value"_s) = 0.2f;  // 2nd harmonic (even, reduced)
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<2>().input("gain"_s).input("value"_s) = 0.4f;  // 3rd harmonic (odd, boosted)
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<3>().input("gain"_s).input("value"_s) = 0.1f;  // 4th harmonic (even, reduced)
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<4>().input("gain"_s).input("value"_s) = 0.15f; // 5th harmonic (odd)
-    m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("gain"_s).input("value"_s) = 0.5f; // noise bus gain
+    m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<0>().input("gain"_s).input("value"_s) = 0.7f;  // 1st harmonic (odd)
+    m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<1>().input("gain"_s).input("value"_s) = 0.2f;  // 2nd harmonic (even, reduced)
+    m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<2>().input("gain"_s).input("value"_s) = 0.4f;  // 3rd harmonic (odd, boosted)
+    m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<3>().input("gain"_s).input("value"_s) = 0.1f;  // 4th harmonic (even, reduced)
+    m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<4>().input("gain"_s).input("value"_s) = 0.15f; // 5th harmonic (odd)
+    m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("gain"_s).input("value"_s) = 0.5f; // noise bus gain
 
     signal<0>().getFreqPortamentoDuration() = 512;
     signal<1>().getFreqPortamentoDuration() = 512;
@@ -188,4 +188,11 @@ complex_fm::Synth::Synth(size_t bufferSize, float samplerate)
     // Noise: bow attack transient (gain starts at 0, triggered per note)
     noise().setGain(0.0f);
     noise().setColor(Graph::noise_gen_t::Color::OneOverF3);
+
+    // Low shelf EQ: tame low-end rumble
+    eq().setSampleRate(samplerate);
+    eq().setType(Graph::biquad_filter_t::Type::LowShelf);
+    eq().setFrequency(200.0f);
+    eq().setQ(0.707f);
+    eq().setGainDb(-3.0f);
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "base/KeyValueTuple.h"
 #include "crtp/nodes/Processor.h"
+#include "dsp/BiquadFilter.h"
 #include "dsp/EnvelopeGenerator.h"
 #include "dsp/LadderFilter.h"
 #include "dsp/Mixer.h"
@@ -118,8 +119,22 @@ class complex_fm::Synth final
                     "wet"_s,
                     "samplerate"_s));
 
-        using type  = phaser_t<filter_t<osc_output_t>>;
-        using shape = shape_t;
+        using biquad_filter_t = dap::dsp::BiquadFilter<scalar_t>;
+
+        template <typename T>
+        using biquad_t = decltype(
+            processor<biquad_filter_t>::
+                with_inputs<T, control_t, control_t, biquad_filter_t::Type, control_t, samplerate_t>::
+                    named("signal"_s,
+                          "frequency"_s,
+                          "Q"_s,
+                          "type"_s,
+                          "gainDb"_s,
+                          "samplerate"_s));
+
+        using phaser_output_t = phaser_t<filter_t<osc_output_t>>;
+        using type             = biquad_t<phaser_output_t>;
+        using shape            = shape_t;
     };
 
     using buffer_t = dap::fastmath::AudioBuffer<float>;
@@ -298,10 +313,10 @@ public:
 
     class PhaserControl
     {
-        Graph::type& m_phaser;
+        Graph::phaser_output_t& m_phaser;
 
     public:
-        PhaserControl(Graph::type& phaser)
+        PhaserControl(Graph::phaser_output_t& phaser)
         : m_phaser(phaser)
         {
         }
@@ -320,6 +335,7 @@ public:
     {
         return Operator{m_graph.input("signal"_s)
                             .input("signal"_s)
+                            .input("signal"_s)
                             .input("y"_s)
                             .input<N>()
                             .input("signal"_s)};
@@ -327,7 +343,7 @@ public:
 
     auto attackEnvPtrs()
     {
-        auto& mixer = m_graph.input("signal"_s).input("signal"_s).input("y"_s);
+        auto& mixer = m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s);
         // FM envelopes (5) + AM envelopes (5)
         return std::array<Graph::envelope_t*, 10>{
             // FM: operator.frequency.y (fm_mod_osc).gain.y.x (envelope)
@@ -348,8 +364,8 @@ public:
     {
         // amplitude envelope, filter envelope, and attack envelopes (FM + AM)
         return Envelope{
-            m_graph.input("signal"_s).input("signal"_s).input("x"_s),
-            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
+            m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("x"_s),
+            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
             attackEnvPtrs()};
     }
 
@@ -361,19 +377,19 @@ public:
     auto filterEnvelope()
     {
         return FilterEnvelope{
-            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
-            m_graph.input("signal"_s).input("frequency"_s).input("x"_s),
-            m_graph.input("signal"_s).input("frequency"_s).input("y"_s).input("y"_s)};
+            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
+            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("x"_s),
+            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("y"_s).input("y"_s)};
     }
 
     auto filter()
     {
-        return Filter{m_graph.input("signal"_s)};
+        return Filter{m_graph.input("signal"_s).input("signal"_s)};
     }
 
     auto phaser()
     {
-        return PhaserControl{m_graph};
+        return PhaserControl{m_graph.input("signal"_s)};
     }
 
     class Noise
@@ -392,7 +408,29 @@ public:
 
     auto noise()
     {
-        return Noise{m_graph.input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("signal"_s)};
+        return Noise{m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("signal"_s)};
+    }
+
+    class EQ
+    {
+        Graph::type& m_eq;
+
+    public:
+        EQ(Graph::type& eq)
+        : m_eq(eq)
+        {
+        }
+
+        void setFrequency(float hz) { m_eq.input("frequency"_s).input("value"_s) = hz; }
+        void setQ(float q) { m_eq.input("Q"_s).input("value"_s) = q; }
+        void setGainDb(float db) { m_eq.input("gainDb"_s).input("value"_s) = db; }
+        void setType(Graph::biquad_filter_t::Type t) { m_eq.input("type"_s) = t; }
+        void setSampleRate(float sr) { m_eq.input("samplerate"_s) = sr; }
+    };
+
+    auto eq()
+    {
+        return EQ{m_graph};
     }
 
     void process()
