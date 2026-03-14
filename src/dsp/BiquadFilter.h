@@ -42,7 +42,7 @@ public:
         const T w0    = T(2) * T(M_PI) * frequency / samplerate;
         const T cosw0 = std::cos(w0);
         const T sinw0 = std::sin(w0);
-        const T alpha = sinw0 / (T(2) * Q);
+        const T alpha = sinw0 / (T(2) * std::max(Q, T(0.001)));
 
         T b0, b1, b2, a0, a1, a2;
 

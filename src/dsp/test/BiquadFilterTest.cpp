@@ -52,7 +52,7 @@ namespace
         const auto input = impulse(bufferSize);
         std::vector<float> outBuffer(bufferSize, 0);
 
-        const int format   = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+        const int format   = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
         const int channels = 1;
         std::vector<float> buffer(bufferSize, 0.0f);
 
