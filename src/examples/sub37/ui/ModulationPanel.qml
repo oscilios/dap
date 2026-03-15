@@ -26,11 +26,11 @@ GroupBox {
     RowLayout {
         spacing: 10
 
-        // Pitch LFO
+        // Pitch LFO 1 (Osc 1 + Sub)
         ColumnLayout {
             spacing: 2
             Label {
-                text: "Pitch LFO"
+                text: "Pitch LFO 1"
                 color: "#b0b0b0"
                 font.pixelSize: 10
                 font.weight: Font.Medium
@@ -57,6 +57,52 @@ GroupBox {
                         SmallRadioButton {
                             checked: SynthBridge.pitchLfoShape === index
                             onClicked: SynthBridge.pitchLfoShape = index
+                            contentItem: Label {
+                                text: modelData
+                                color: parent.checked ? "#e0e0e0" : "#777777"
+                                font.pixelSize: 10
+                                leftPadding: parent.indicator.width + 2
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
+
+        // Pitch LFO 2 (Osc 2 only)
+        ColumnLayout {
+            spacing: 2
+            Label {
+                text: "Pitch LFO 2"
+                color: "#b0b0b0"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                Layout.alignment: Qt.AlignHCenter
+            }
+            RowLayout {
+                spacing: 8
+                RotarySlider {
+                    label: "Rate"
+                    from: 0.1; to: 20; value: SynthBridge.pitchLfo2Rate
+                    stepSize: 0.1; decimals: 1
+                    onValueChanged: SynthBridge.pitchLfo2Rate = value
+                }
+                RotarySlider {
+                    label: "Depth"
+                    from: 0; to: 50; value: SynthBridge.pitchLfo2Depth
+                    stepSize: 0.1; decimals: 1
+                    onValueChanged: SynthBridge.pitchLfo2Depth = value
+                }
+                ColumnLayout {
+                    spacing: 1
+                    Repeater {
+                        model: ["Sine", "Square", "Saw", "InvSaw", "Tri"]
+                        SmallRadioButton {
+                            checked: SynthBridge.pitchLfo2Shape === index
+                            onClicked: SynthBridge.pitchLfo2Shape = index
                             contentItem: Label {
                                 text: modelData
                                 color: parent.checked ? "#e0e0e0" : "#777777"

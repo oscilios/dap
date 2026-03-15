@@ -39,9 +39,15 @@ GroupBox {
             RowLayout {
                 spacing: 8
                 RotarySlider {
+                    id: rangeSlider
+                    label: "Range"
+                    from: 200; to: 20000; value: 2000
+                    stepSize: 100; decimals: 0
+                }
+                RotarySlider {
                     label: "Cutoff"
-                    from: 20; to: 20000; value: SynthBridge.filterCutoff
-                    stepSize: 10; decimals: 0
+                    from: 20; to: rangeSlider.value; value: SynthBridge.filterCutoff
+                    stepSize: Math.max(1, rangeSlider.value / 200); decimals: 0
                     onValueChanged: SynthBridge.filterCutoff = value
                 }
                 RotarySlider {

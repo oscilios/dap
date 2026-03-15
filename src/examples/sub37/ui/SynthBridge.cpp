@@ -67,6 +67,7 @@ void SynthBridge::initAudioDevice(int deviceIdx)
     m_synth->filterEnvelope().setRelease(m_filterRelease);
 
     m_synth->setPitchLfo(m_pitchLfoRate, m_pitchLfoDepth, static_cast<Shape>(m_pitchLfoShape));
+    m_synth->setPitchLfo2(m_pitchLfo2Rate, m_pitchLfo2Depth, static_cast<Shape>(m_pitchLfo2Shape));
     m_synth->filter().setLfoRate(m_filterLfoRate);
     m_synth->filter().setLfoDepth(m_filterLfoDepth);
     m_synth->filter().setLfoShape(static_cast<Shape>(m_filterLfoShape));
@@ -91,12 +92,21 @@ bool SynthBridge::stopAudio()
     return m_process && m_process->stop();
 }
 
+void SynthBridge::updateOsc2Freq()
+{
+    if (!m_synth)
+        return;
+    float octaveMul = std::pow(2.0f, static_cast<float>(m_osc2Octave));
+    m_synth->osc2().setFreq(m_fundamental * octaveMul + m_osc2BeatFreq);
+}
+
 void SynthBridge::noteOn(int midiNote)
 {
     if (!m_synth)
         return;
     m_fundamental = 440.0f * std::pow(2.0f, (midiNote - 69) / 12.0f);
     m_synth->setNote(m_fundamental);
+    updateOsc2Freq();
 
     if (m_noteActive)
     {
@@ -208,6 +218,40 @@ void SynthBridge::setPitchLfoShape(int v)
     emit pitchLfoShapeChanged();
 }
 
+// Pitch LFO 2 setters — osc2 only
+void SynthBridge::setPitchLfo2Rate(float v)
+{
+    if (qFuzzyCompare(m_pitchLfo2Rate, v))
+        return;
+    m_pitchLfo2Rate = v;
+    if (m_synth)
+        m_synth->setPitchLfo2(m_pitchLfo2Rate, m_pitchLfo2Depth);
+    emit pitchLfo2RateChanged();
+}
+
+void SynthBridge::setPitchLfo2Depth(float v)
+{
+    if (qFuzzyCompare(m_pitchLfo2Depth, v))
+        return;
+    m_pitchLfo2Depth = v;
+    if (m_synth)
+        m_synth->setPitchLfo2(m_pitchLfo2Rate, m_pitchLfo2Depth);
+    emit pitchLfo2DepthChanged();
+}
+
+void SynthBridge::setPitchLfo2Shape(int v)
+{
+    if (m_pitchLfo2Shape == v)
+        return;
+    m_pitchLfo2Shape = v;
+    if (m_synth)
+    {
+        using Shape = dap::dsp::OscillatorFunctions::Shape;
+        m_synth->setPitchLfo2(m_pitchLfo2Rate, m_pitchLfo2Depth, static_cast<Shape>(v));
+    }
+    emit pitchLfo2ShapeChanged();
+}
+
 // Osc2 beat frequency
 void SynthBridge::setOsc2BeatFreq(float v)
 {
@@ -217,9 +261,19 @@ void SynthBridge::setOsc2BeatFreq(float v)
     if (m_synth)
     {
         m_synth->setOsc2BeatFreq(v);
-        m_synth->osc2().setFreq(m_fundamental + v);
+        updateOsc2Freq();
     }
     emit osc2BeatFreqChanged();
+}
+
+// Osc2 octave offset
+void SynthBridge::setOsc2Octave(int v)
+{
+    if (m_osc2Octave == v)
+        return;
+    m_osc2Octave = v;
+    updateOsc2Freq();
+    emit osc2OctaveChanged();
 }
 
 // Shape setters (int, not float)

@@ -106,6 +106,12 @@ RowLayout {
                         }
                     }
                     RotarySlider {
+                        label: "Octave"
+                        from: -2; to: 2; value: SynthBridge.osc2Octave
+                        stepSize: 1; decimals: 0
+                        onValueChanged: SynthBridge.osc2Octave = value
+                    }
+                    RotarySlider {
                         label: "Beat"
                         from: -10; to: 10; value: SynthBridge.osc2BeatFreq
                         stepSize: 0.1; decimals: 1

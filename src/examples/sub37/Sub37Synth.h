@@ -409,7 +409,7 @@ public:
         subOsc().setGlideDuration(samples);
     }
 
-    // Set pitch LFO (mod 1) params on all oscillator copies
+    // Set pitch LFO 1 params on osc1 and sub
     void setPitchLfo(float rate, float depth, Graph::shape shape = Graph::shape::Triangle)
     {
         auto setLfo = [&](auto osc)
@@ -419,8 +419,15 @@ public:
             osc.setPitchLfoShape(shape);
         };
         setLfo(osc1());
-        setLfo(osc2());
         setLfo(subOsc());
+    }
+
+    // Set pitch LFO 2 params on osc2 only
+    void setPitchLfo2(float rate, float depth, Graph::shape shape = Graph::shape::Triangle)
+    {
+        osc2().setPitchLfoRate(rate);
+        osc2().setPitchLfoDepth(depth);
+        osc2().setPitchLfoShape(shape);
     }
 
     void process()

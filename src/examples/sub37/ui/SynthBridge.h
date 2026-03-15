@@ -22,6 +22,7 @@ class SynthBridge : public QObject
     Q_PROPERTY(float osc2Level READ osc2Level WRITE setOsc2Level NOTIFY osc2LevelChanged)
     Q_PROPERTY(
         float osc2BeatFreq READ osc2BeatFreq WRITE setOsc2BeatFreq NOTIFY osc2BeatFreqChanged)
+    Q_PROPERTY(int osc2Octave READ osc2Octave WRITE setOsc2Octave NOTIFY osc2OctaveChanged)
     Q_PROPERTY(float subLevel READ subLevel WRITE setSubLevel NOTIFY subLevelChanged)
 
     // Noise
@@ -59,6 +60,14 @@ class SynthBridge : public QObject
     Q_PROPERTY(
         int pitchLfoShape READ pitchLfoShape WRITE setPitchLfoShape NOTIFY pitchLfoShapeChanged)
 
+    // Mod 1b (Pitch LFO 2 — Osc 2 only)
+    Q_PROPERTY(
+        float pitchLfo2Rate READ pitchLfo2Rate WRITE setPitchLfo2Rate NOTIFY pitchLfo2RateChanged)
+    Q_PROPERTY(float pitchLfo2Depth READ pitchLfo2Depth WRITE setPitchLfo2Depth NOTIFY
+                   pitchLfo2DepthChanged)
+    Q_PROPERTY(
+        int pitchLfo2Shape READ pitchLfo2Shape WRITE setPitchLfo2Shape NOTIFY pitchLfo2ShapeChanged)
+
     // Mod 2 (Filter LFO)
     Q_PROPERTY(
         float filterLfoRate READ filterLfoRate WRITE setFilterLfoRate NOTIFY filterLfoRateChanged)
@@ -94,6 +103,10 @@ public:
     float osc2BeatFreq() const
     {
         return m_osc2BeatFreq;
+    }
+    int osc2Octave() const
+    {
+        return m_osc2Octave;
     }
     float subLevel() const
     {
@@ -169,6 +182,19 @@ public:
         return m_pitchLfoShape;
     }
 
+    float pitchLfo2Rate() const
+    {
+        return m_pitchLfo2Rate;
+    }
+    float pitchLfo2Depth() const
+    {
+        return m_pitchLfo2Depth;
+    }
+    int pitchLfo2Shape() const
+    {
+        return m_pitchLfo2Shape;
+    }
+
     float filterLfoRate() const
     {
         return m_filterLfoRate;
@@ -200,6 +226,7 @@ public slots:
     void setOsc2Shape(int v);
     void setOsc2Level(float v);
     void setOsc2BeatFreq(float v);
+    void setOsc2Octave(int v);
     void setSubLevel(float v);
 
     void setNoiseGain(float v);
@@ -223,6 +250,10 @@ public slots:
     void setPitchLfoDepth(float v);
     void setPitchLfoShape(int v);
 
+    void setPitchLfo2Rate(float v);
+    void setPitchLfo2Depth(float v);
+    void setPitchLfo2Shape(int v);
+
     void setFilterLfoRate(float v);
     void setFilterLfoDepth(float v);
     void setFilterLfoShape(int v);
@@ -235,6 +266,7 @@ signals:
     void osc2ShapeChanged();
     void osc2LevelChanged();
     void osc2BeatFreqChanged();
+    void osc2OctaveChanged();
     void subLevelChanged();
 
     void noiseGainChanged();
@@ -258,6 +290,10 @@ signals:
     void pitchLfoDepthChanged();
     void pitchLfoShapeChanged();
 
+    void pitchLfo2RateChanged();
+    void pitchLfo2DepthChanged();
+    void pitchLfo2ShapeChanged();
+
     void filterLfoRateChanged();
     void filterLfoDepthChanged();
     void filterLfoShapeChanged();
@@ -266,6 +302,7 @@ signals:
 
 private:
     void initAudioDevice(int deviceIdx);
+    void updateOsc2Freq();
 
     std::unique_ptr<sub37::AudioProcess> m_process;
     sub37::Synth* m_synth = nullptr;
@@ -280,6 +317,7 @@ private:
     int m_osc2Shape      = 2; // Saw
     float m_osc2Level    = 0.5f;
     float m_osc2BeatFreq = 2.0f;
+    int m_osc2Octave     = 0;
     float m_subLevel     = 0.6f;
 
     float m_noiseGain = 0.0f;
@@ -302,6 +340,10 @@ private:
     float m_pitchLfoRate  = 5.0f;
     float m_pitchLfoDepth = 0.0f;
     int m_pitchLfoShape   = 4; // Triangle
+
+    float m_pitchLfo2Rate  = 5.0f;
+    float m_pitchLfo2Depth = 0.0f;
+    int m_pitchLfo2Shape   = 4; // Triangle
 
     float m_filterLfoRate  = 0.5f;
     float m_filterLfoDepth = 0.0f;
