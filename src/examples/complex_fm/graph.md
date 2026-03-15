@@ -27,6 +27,7 @@ graph BT
     filter_freq["Filter Cutoff<br/>base + filterEnv * amount"]
     filter["LadderFilter<br/>(resonance)"]
     phaser["Phaser<br/>(rate, depth, feedback, wet)"]
+    eq["BiquadFilter<br/>(LowShelf, freq, Q, gainDb)"]
     output(["Output"])
 
     op0 -->|signal| bus0
@@ -48,7 +49,8 @@ graph BT
     mul -->|signal| filter
     filter_freq -->|frequency| filter
     filter -->|signal| phaser
-    phaser --> output
+    phaser -->|signal| eq
+    eq --> output
 ```
 
 ## Per-operator structure (fm_osc_t)
@@ -129,6 +131,14 @@ graph BT
     mul --> add
     add --> output
 ```
+
+## Output EQ (biquad_t)
+
+Final-stage BiquadFilter configured as a low shelf to tame low-end rumble.
+Supports all standard biquad types (LPF, HPF, BPF, Notch, Peak, LowShelf, HighShelf)
+via the `Type` enum. Uses `IIRFilter<float, 3>` (Direct Form II) internally.
+
+Default settings: LowShelf at 200 Hz, Q = 0.707, -3 dB.
 
 ## Envelope gating
 
