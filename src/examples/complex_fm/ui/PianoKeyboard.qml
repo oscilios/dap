@@ -13,12 +13,12 @@ Item {
     readonly property int whiteKeyCount: {
         var count = 0;
         for (var n = startNote; n <= endNote; ++n) {
-            var pc = n % 12;
-            if (pc !== 1 && pc !== 3 && pc !== 6 && pc !== 8 && pc !== 10)
-                count++;
+            if (!isBlackKey(n)) count++;
         }
         return count;
     }
+    readonly property real whiteKeyWidth: whiteKeyCount > 0
+        ? (keysArea.width - (whiteKeyCount - 1)) / whiteKeyCount : 0
 
     property int activeNote: -1
 
@@ -146,7 +146,7 @@ Item {
 
                 Rectangle {
                     required property int modelData
-                    width: (keysArea.width - (root.whiteKeyCount - 1)) / root.whiteKeyCount
+                    width: root.whiteKeyWidth
                     height: keysArea.height
                     color: root.activeNote === modelData ? "#4fc3f7" : "#eeeeee"
                     border.color: "#999999"
@@ -193,11 +193,10 @@ Item {
 
             Rectangle {
                 required property int modelData
-                readonly property real wkWidth: (keysArea.width - (root.whiteKeyCount - 1)) / root.whiteKeyCount
                 readonly property int wkIdx: root.whiteKeyIndex(modelData)
-                x: wkIdx * (wkWidth + 1) + wkWidth * 0.65
+                x: wkIdx * (root.whiteKeyWidth + 1) + root.whiteKeyWidth * 0.65
                 y: 0
-                width: wkWidth * 0.7
+                width: root.whiteKeyWidth * 0.7
                 height: keysArea.height * 0.6
                 color: root.activeNote === modelData ? "#0288d1" : "#333333"
                 border.color: "#111111"

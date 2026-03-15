@@ -14,8 +14,6 @@ SynthBridge::SynthBridge(QObject* parent)
     m_op[2] = {0.3f, 1.3f, 0.2f, 0.1f, 6.4f, 0.14f, 590.5f, 2.0f, 900.0f, 0.4f};
     m_op[3] = {0.08f, 1.6f, 0.15f, 0.08f, 6.6f, 0.1f, 787.5f, 1.5f, 600.0f, 0.1f};
     m_op[4] = {0.12f, 1.9f, 0.12f, 0.06f, 6.8f, 0.08f, 984.5f, 1.2f, 450.0f, 0.15f};
-
-    initAudioDevice(m_deviceIndex);
 }
 
 void SynthBridge::setDeviceIndex(int idx)
@@ -167,10 +165,13 @@ void SynthBridge::noteOn(int midiNote)
         // Retrigger: gate off, then gate on after the audio thread has processed
         // at least one buffer so the envelope sees the low→high transition
         m_synth->envelope().setGate(0.0f);
-        QTimer::singleShot(5, this, [this]() {
-            if (m_synth && m_noteActive)
-                m_synth->envelope().setGate(1.0f);
-        });
+        QTimer::singleShot(5,
+                           this,
+                           [this]()
+                           {
+                               if (m_synth && m_noteActive)
+                                   m_synth->envelope().setGate(1.0f);
+                           });
     }
     else
     {
@@ -209,42 +210,16 @@ void SynthBridge::noteOff()
     IMPL_OP_SETTER(N, vibratoDepth, vibratoDepth, vibratoDepthChanged, setVibratoDepth(v)) \
     IMPL_OP_SETTER(N, modFreq, modFreq, modFreqChanged, setModFreq(v))                     \
     IMPL_OP_SETTER(N, modIdx, modIdx, modIdxChanged, setModIdx(v))                         \
-    IMPL_OP_SETTER(N, fmEnvAmount, fmEnvAmount, fmEnvAmountChanged, setFMEnvAmount(v))     \
-    IMPL_OP_SETTER(N, busGain, busGain, busGainChanged, /* handled below */)
-
-// busGain needs special handling — it sets the mixer bus gain, not an Operator method
-// We'll override the macro-generated version below.
-
-// First define all but busGain via a narrower macro
-#undef IMPL_OP_SETTERS
-
-#define IMPL_OP_SETTERS_NO_BUS(N)                                                          \
-    IMPL_OP_SETTER(N, carrierLevel, carrierLevel, carrierLevelChanged, setCarrierLevel(v)) \
-    IMPL_OP_SETTER(N, amRate, amRate, amRateChanged, setAmplitudeModRate(v))               \
-    IMPL_OP_SETTER(N, amDepth, amDepth, amDepthChanged, setAmplitudeModDepth(v))           \
-    IMPL_OP_SETTER(N, amEnvAmount, amEnvAmount, amEnvAmountChanged, setAMEnvAmount(v))     \
-    IMPL_OP_SETTER(N, vibratoRate, vibratoRate, vibratoRateChanged, setVibratoRate(v))     \
-    IMPL_OP_SETTER(N, vibratoDepth, vibratoDepth, vibratoDepthChanged, setVibratoDepth(v)) \
-    IMPL_OP_SETTER(N, modFreq, modFreq, modFreqChanged, setModFreq(v))                     \
-    IMPL_OP_SETTER(N, modIdx, modIdx, modIdxChanged, setModIdx(v))                         \
     IMPL_OP_SETTER(N, fmEnvAmount, fmEnvAmount, fmEnvAmountChanged, setFMEnvAmount(v))
 
-IMPL_OP_SETTERS_NO_BUS(0)
-IMPL_OP_SETTERS_NO_BUS(1)
-IMPL_OP_SETTERS_NO_BUS(2)
-IMPL_OP_SETTERS_NO_BUS(3)
-IMPL_OP_SETTERS_NO_BUS(4)
+IMPL_OP_SETTERS(0)
+IMPL_OP_SETTERS(1)
+IMPL_OP_SETTERS(2)
+IMPL_OP_SETTERS(3)
+IMPL_OP_SETTERS(4)
 
 #undef IMPL_OP_SETTER
-#undef IMPL_OP_SETTERS_NO_BUS
-
-// busGain: sets mixer bus level (not part of Operator accessor class)
-// The bus gain is set through the graph directly. We need to access it via the mixer.
-// Looking at ComplexFMSynth.cpp line 6-11, bus gain is set through:
-// m_graph.input("signal"_s)...input<N>().input("gain"_s).input("value"_s)
-// But we don't have direct access from SynthBridge — we'll skip the synth call for busGain
-// since it requires graph-level access. The Operator class doesn't expose it.
-// For now, store the value for UI state only.
+#undef IMPL_OP_SETTERS
 
 #define IMPL_BUS_GAIN(N)                          \
     void SynthBridge::setOp##N##_busGain(float v) \
@@ -252,6 +227,8 @@ IMPL_OP_SETTERS_NO_BUS(4)
         if (qFuzzyCompare(m_op[N].busGain, v))    \
             return;                               \
         m_op[N].busGain = v;                      \
+        if (m_synth)                              \
+            m_synth->setBusGain<N>(v);            \
         emit op##N##_busGainChanged();            \
     }
 
@@ -262,215 +239,73 @@ IMPL_BUS_GAIN(3)
 IMPL_BUS_GAIN(4)
 #undef IMPL_BUS_GAIN
 
-// --- Amplitude envelope ---
+// --- Scalar property setters ---
 
-void SynthBridge::setAmpAttack(float v)
-{
-    if (qFuzzyCompare(m_ampAttack, v))
-        return;
-    m_ampAttack = v;
-    if (m_synth)
-        m_synth->envelope().setAttack(v);
-    emit ampAttackChanged();
-}
+#define IMPL_FLOAT_SETTER(NAME, MEMBER, SYNTH_CALL, SIGNAL) \
+    void SynthBridge::set##NAME(float v)                    \
+    {                                                       \
+        if (qFuzzyCompare(MEMBER, v))                       \
+            return;                                         \
+        MEMBER = v;                                         \
+        if (m_synth)                                        \
+            m_synth->SYNTH_CALL;                            \
+        emit SIGNAL();                                      \
+    }
 
-void SynthBridge::setAmpDecay(float v)
-{
-    if (qFuzzyCompare(m_ampDecay, v))
-        return;
-    m_ampDecay = v;
-    if (m_synth)
-        m_synth->envelope().setDecay(v);
-    emit ampDecayChanged();
-}
+IMPL_FLOAT_SETTER(AmpAttack, m_ampAttack, envelope().setAttack(v), ampAttackChanged)
+IMPL_FLOAT_SETTER(AmpDecay, m_ampDecay, envelope().setDecay(v), ampDecayChanged)
+IMPL_FLOAT_SETTER(AmpSustain, m_ampSustain, envelope().setSustain(v), ampSustainChanged)
+IMPL_FLOAT_SETTER(AmpRelease, m_ampRelease, envelope().setRelease(v), ampReleaseChanged)
 
-void SynthBridge::setAmpSustain(float v)
-{
-    if (qFuzzyCompare(m_ampSustain, v))
-        return;
-    m_ampSustain = v;
-    if (m_synth)
-        m_synth->envelope().setSustain(v);
-    emit ampSustainChanged();
-}
+IMPL_FLOAT_SETTER(FilterResonance,
+                  m_filterResonance,
+                  filter().setResonance(v),
+                  filterResonanceChanged)
+IMPL_FLOAT_SETTER(FilterEnvBase, m_filterEnvBase, filterEnvelope().setBase(v), filterEnvBaseChanged)
+IMPL_FLOAT_SETTER(FilterEnvAmount,
+                  m_filterEnvAmount,
+                  filterEnvelope().setAmount(v),
+                  filterEnvAmountChanged)
+IMPL_FLOAT_SETTER(FilterEnvAttack,
+                  m_filterEnvAttack,
+                  filterEnvelope().setAttack(v),
+                  filterEnvAttackChanged)
+IMPL_FLOAT_SETTER(FilterEnvDecay,
+                  m_filterEnvDecay,
+                  filterEnvelope().setDecay(v),
+                  filterEnvDecayChanged)
+IMPL_FLOAT_SETTER(FilterEnvSustain,
+                  m_filterEnvSustain,
+                  filterEnvelope().setSustain(v),
+                  filterEnvSustainChanged)
+IMPL_FLOAT_SETTER(FilterEnvRelease,
+                  m_filterEnvRelease,
+                  filterEnvelope().setRelease(v),
+                  filterEnvReleaseChanged)
 
-void SynthBridge::setAmpRelease(float v)
-{
-    if (qFuzzyCompare(m_ampRelease, v))
-        return;
-    m_ampRelease = v;
-    if (m_synth)
-        m_synth->envelope().setRelease(v);
-    emit ampReleaseChanged();
-}
+IMPL_FLOAT_SETTER(AtkEnvAttack, m_atkEnvAttack, attackEnvelope().setAttack(v), atkEnvAttackChanged)
+IMPL_FLOAT_SETTER(AtkEnvDecay, m_atkEnvDecay, attackEnvelope().setDecay(v), atkEnvDecayChanged)
+IMPL_FLOAT_SETTER(AtkEnvSustain,
+                  m_atkEnvSustain,
+                  attackEnvelope().setSustain(v),
+                  atkEnvSustainChanged)
+IMPL_FLOAT_SETTER(AtkEnvRelease,
+                  m_atkEnvRelease,
+                  attackEnvelope().setRelease(v),
+                  atkEnvReleaseChanged)
 
-// --- Filter ---
+IMPL_FLOAT_SETTER(PhaserRate, m_phaserRate, phaser().setRate(v), phaserRateChanged)
+IMPL_FLOAT_SETTER(PhaserDepth, m_phaserDepth, phaser().setDepth(v), phaserDepthChanged)
+IMPL_FLOAT_SETTER(PhaserFeedback, m_phaserFeedback, phaser().setFeedback(v), phaserFeedbackChanged)
+IMPL_FLOAT_SETTER(PhaserWet, m_phaserWet, phaser().setWet(v), phaserWetChanged)
 
-void SynthBridge::setFilterResonance(float v)
-{
-    if (qFuzzyCompare(m_filterResonance, v))
-        return;
-    m_filterResonance = v;
-    if (m_synth)
-        m_synth->filter().setResonance(v);
-    emit filterResonanceChanged();
-}
+IMPL_FLOAT_SETTER(NoiseGain, m_noiseGain, noise().setGain(v), noiseGainChanged)
 
-void SynthBridge::setFilterEnvBase(float v)
-{
-    if (qFuzzyCompare(m_filterEnvBase, v))
-        return;
-    m_filterEnvBase = v;
-    if (m_synth)
-        m_synth->filterEnvelope().setBase(v);
-    emit filterEnvBaseChanged();
-}
+IMPL_FLOAT_SETTER(EqFrequency, m_eqFrequency, eq().setFrequency(v), eqFrequencyChanged)
+IMPL_FLOAT_SETTER(EqQ, m_eqQ, eq().setQ(v), eqQChanged)
+IMPL_FLOAT_SETTER(EqGainDb, m_eqGainDb, eq().setGainDb(v), eqGainDbChanged)
 
-void SynthBridge::setFilterEnvAmount(float v)
-{
-    if (qFuzzyCompare(m_filterEnvAmount, v))
-        return;
-    m_filterEnvAmount = v;
-    if (m_synth)
-        m_synth->filterEnvelope().setAmount(v);
-    emit filterEnvAmountChanged();
-}
-
-void SynthBridge::setFilterEnvAttack(float v)
-{
-    if (qFuzzyCompare(m_filterEnvAttack, v))
-        return;
-    m_filterEnvAttack = v;
-    if (m_synth)
-        m_synth->filterEnvelope().setAttack(v);
-    emit filterEnvAttackChanged();
-}
-
-void SynthBridge::setFilterEnvDecay(float v)
-{
-    if (qFuzzyCompare(m_filterEnvDecay, v))
-        return;
-    m_filterEnvDecay = v;
-    if (m_synth)
-        m_synth->filterEnvelope().setDecay(v);
-    emit filterEnvDecayChanged();
-}
-
-void SynthBridge::setFilterEnvSustain(float v)
-{
-    if (qFuzzyCompare(m_filterEnvSustain, v))
-        return;
-    m_filterEnvSustain = v;
-    if (m_synth)
-        m_synth->filterEnvelope().setSustain(v);
-    emit filterEnvSustainChanged();
-}
-
-void SynthBridge::setFilterEnvRelease(float v)
-{
-    if (qFuzzyCompare(m_filterEnvRelease, v))
-        return;
-    m_filterEnvRelease = v;
-    if (m_synth)
-        m_synth->filterEnvelope().setRelease(v);
-    emit filterEnvReleaseChanged();
-}
-
-// --- Attack envelope ---
-
-void SynthBridge::setAtkEnvAttack(float v)
-{
-    if (qFuzzyCompare(m_atkEnvAttack, v))
-        return;
-    m_atkEnvAttack = v;
-    if (m_synth)
-        m_synth->attackEnvelope().setAttack(v);
-    emit atkEnvAttackChanged();
-}
-
-void SynthBridge::setAtkEnvDecay(float v)
-{
-    if (qFuzzyCompare(m_atkEnvDecay, v))
-        return;
-    m_atkEnvDecay = v;
-    if (m_synth)
-        m_synth->attackEnvelope().setDecay(v);
-    emit atkEnvDecayChanged();
-}
-
-void SynthBridge::setAtkEnvSustain(float v)
-{
-    if (qFuzzyCompare(m_atkEnvSustain, v))
-        return;
-    m_atkEnvSustain = v;
-    if (m_synth)
-        m_synth->attackEnvelope().setSustain(v);
-    emit atkEnvSustainChanged();
-}
-
-void SynthBridge::setAtkEnvRelease(float v)
-{
-    if (qFuzzyCompare(m_atkEnvRelease, v))
-        return;
-    m_atkEnvRelease = v;
-    if (m_synth)
-        m_synth->attackEnvelope().setRelease(v);
-    emit atkEnvReleaseChanged();
-}
-
-// --- Phaser ---
-
-void SynthBridge::setPhaserRate(float v)
-{
-    if (qFuzzyCompare(m_phaserRate, v))
-        return;
-    m_phaserRate = v;
-    if (m_synth)
-        m_synth->phaser().setRate(v);
-    emit phaserRateChanged();
-}
-
-void SynthBridge::setPhaserDepth(float v)
-{
-    if (qFuzzyCompare(m_phaserDepth, v))
-        return;
-    m_phaserDepth = v;
-    if (m_synth)
-        m_synth->phaser().setDepth(v);
-    emit phaserDepthChanged();
-}
-
-void SynthBridge::setPhaserFeedback(float v)
-{
-    if (qFuzzyCompare(m_phaserFeedback, v))
-        return;
-    m_phaserFeedback = v;
-    if (m_synth)
-        m_synth->phaser().setFeedback(v);
-    emit phaserFeedbackChanged();
-}
-
-void SynthBridge::setPhaserWet(float v)
-{
-    if (qFuzzyCompare(m_phaserWet, v))
-        return;
-    m_phaserWet = v;
-    if (m_synth)
-        m_synth->phaser().setWet(v);
-    emit phaserWetChanged();
-}
-
-// --- Noise ---
-
-void SynthBridge::setNoiseGain(float v)
-{
-    if (qFuzzyCompare(m_noiseGain, v))
-        return;
-    m_noiseGain = v;
-    if (m_synth)
-        m_synth->noise().setGain(v);
-    emit noiseGainChanged();
-}
+#undef IMPL_FLOAT_SETTER
 
 void SynthBridge::setNoiseColor(int v)
 {
@@ -483,38 +318,6 @@ void SynthBridge::setNoiseColor(int v)
         m_synth->noise().setColor(static_cast<Color>(v));
     }
     emit noiseColorChanged();
-}
-
-// --- EQ ---
-
-void SynthBridge::setEqFrequency(float v)
-{
-    if (qFuzzyCompare(m_eqFrequency, v))
-        return;
-    m_eqFrequency = v;
-    if (m_synth)
-        m_synth->eq().setFrequency(v);
-    emit eqFrequencyChanged();
-}
-
-void SynthBridge::setEqQ(float v)
-{
-    if (qFuzzyCompare(m_eqQ, v))
-        return;
-    m_eqQ = v;
-    if (m_synth)
-        m_synth->eq().setQ(v);
-    emit eqQChanged();
-}
-
-void SynthBridge::setEqGainDb(float v)
-{
-    if (qFuzzyCompare(m_eqGainDb, v))
-        return;
-    m_eqGainDb = v;
-    if (m_synth)
-        m_synth->eq().setGainDb(v);
-    emit eqGainDbChanged();
 }
 
 void SynthBridge::setEqType(int v)

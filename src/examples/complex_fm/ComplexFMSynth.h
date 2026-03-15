@@ -8,8 +8,8 @@
 #include "dsp/NoiseGenerator.h"
 #include "dsp/Oscillator.h"
 #include "dsp/Phaser.h"
-#include "dsp/UniformDistribution.h"
 #include "dsp/Smoother.h"
+#include "dsp/UniformDistribution.h"
 #include "fastmath/AudioBuffer.h"
 #include <array>
 #include <cstddef>
@@ -91,7 +91,10 @@ class complex_fm::Synth final
 
         // Noise generator as 6th mixer bus
         using noise_gen_t = dap::dsp::NoiseGenerator<dap::dsp::UniformDistribution>;
-        using noise_t     = decltype(processor<noise_gen_t>::with_inputs<control_t, noise_gen_t::Color>::named("gain"_s, "color"_s));
+        using noise_t =
+            decltype(processor<noise_gen_t>::with_inputs<control_t, noise_gen_t::Color>::named(
+                "gain"_s,
+                "color"_s));
 
         using osc_mixer_t  = mixer_t<fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t, fm_osc_t, noise_t>;
         using osc_output_t = decltype(envelope_t{} * osc_mixer_t{});
@@ -109,37 +112,40 @@ class complex_fm::Synth final
                              "samplerate"_s));
 
         template <typename T>
-        using phaser_t = decltype(
-            processor<dap::dsp::Phaser<scalar_t>>::
-                with_inputs<T, control_t, control_t, control_t, control_t, samplerate_t>::named(
-                    "signal"_s,
-                    "frequency"_s,
-                    "depth"_s,
-                    "feedback"_s,
-                    "wet"_s,
-                    "samplerate"_s));
+        using phaser_t =
+            decltype(processor<dap::dsp::Phaser<scalar_t>>::
+                         with_inputs<T, control_t, control_t, control_t, control_t, samplerate_t>::
+                             named("signal"_s,
+                                   "frequency"_s,
+                                   "depth"_s,
+                                   "feedback"_s,
+                                   "wet"_s,
+                                   "samplerate"_s));
 
         using biquad_filter_t = dap::dsp::BiquadFilter<scalar_t>;
 
         template <typename T>
-        using biquad_t = decltype(
-            processor<biquad_filter_t>::
-                with_inputs<T, control_t, control_t, biquad_filter_t::Type, control_t, samplerate_t>::
-                    named("signal"_s,
-                          "frequency"_s,
-                          "Q"_s,
-                          "type"_s,
-                          "gainDb"_s,
-                          "samplerate"_s));
+        using biquad_t =
+            decltype(processor<biquad_filter_t>::with_inputs<T,
+                                                             control_t,
+                                                             control_t,
+                                                             biquad_filter_t::Type,
+                                                             control_t,
+                                                             samplerate_t>::named("signal"_s,
+                                                                                  "frequency"_s,
+                                                                                  "Q"_s,
+                                                                                  "type"_s,
+                                                                                  "gainDb"_s,
+                                                                                  "samplerate"_s));
 
         using phaser_output_t = phaser_t<filter_t<osc_output_t>>;
-        using type             = biquad_t<phaser_output_t>;
-        using shape            = shape_t;
+        using type            = biquad_t<phaser_output_t>;
+        using shape           = shape_t;
     };
 
     using buffer_t = dap::fastmath::AudioBuffer<float>;
 
-    buffer_t    m_output;
+    buffer_t m_output;
     Graph::type m_graph;
 
 public:
@@ -151,7 +157,8 @@ public:
         std::array<Graph::envelope_t*, 10> m_attackEnvs; // 5 FM + 5 AM
 
     public:
-        Envelope(Graph::envelope_t& ampEnv, Graph::envelope_t& filterEnv,
+        Envelope(Graph::envelope_t& ampEnv,
+                 Graph::envelope_t& filterEnv,
                  std::array<Graph::envelope_t*, 10> attackEnvs)
         : m_ampEnv(ampEnv)
         , m_filterEnv(filterEnv)
@@ -166,37 +173,71 @@ public:
             for (auto* env : m_attackEnvs)
                 env->input("gate"_s) = gate;
         }
-        void setAttack(float t) { m_ampEnv.input("attack"_s) = t; }
-        void setDecay(float t) { m_ampEnv.input("decay"_s) = t; }
-        void setSustain(float s) { m_ampEnv.input("sustain"_s) = s; }
-        void setRelease(float t) { m_ampEnv.input("release"_s) = t; }
-        void setSampleRate(float sr) { m_ampEnv.input("samplerate"_s) = sr; }
+        void setAttack(float t)
+        {
+            m_ampEnv.input("attack"_s) = t;
+        }
+        void setDecay(float t)
+        {
+            m_ampEnv.input("decay"_s) = t;
+        }
+        void setSustain(float s)
+        {
+            m_ampEnv.input("sustain"_s) = s;
+        }
+        void setRelease(float t)
+        {
+            m_ampEnv.input("release"_s) = t;
+        }
+        void setSampleRate(float sr)
+        {
+            m_ampEnv.input("samplerate"_s) = sr;
+        }
     };
 
     // Filter envelope — controls cutoff: frequency = base + filterEnv * amount
     class FilterEnvelope
     {
         Graph::envelope_t& m_env;
-        Graph::control_t&  m_base;
-        Graph::control_t&  m_amount;
+        Graph::control_t& m_base;
+        Graph::control_t& m_amount;
 
     public:
-        FilterEnvelope(Graph::envelope_t& env,
-                       Graph::control_t&  base,
-                       Graph::control_t&  amount)
+        FilterEnvelope(Graph::envelope_t& env, Graph::control_t& base, Graph::control_t& amount)
         : m_env(env)
         , m_base(base)
         , m_amount(amount)
         {
         }
 
-        void setAttack(float t) { m_env.input("attack"_s) = t; }
-        void setDecay(float t) { m_env.input("decay"_s) = t; }
-        void setSustain(float s) { m_env.input("sustain"_s) = s; }
-        void setRelease(float t) { m_env.input("release"_s) = t; }
-        void setSampleRate(float sr) { m_env.input("samplerate"_s) = sr; }
-        void setBase(float hz) { m_base.input("value"_s) = hz; }
-        void setAmount(float hz) { m_amount.input("value"_s) = hz; }
+        void setAttack(float t)
+        {
+            m_env.input("attack"_s) = t;
+        }
+        void setDecay(float t)
+        {
+            m_env.input("decay"_s) = t;
+        }
+        void setSustain(float s)
+        {
+            m_env.input("sustain"_s) = s;
+        }
+        void setRelease(float t)
+        {
+            m_env.input("release"_s) = t;
+        }
+        void setSampleRate(float sr)
+        {
+            m_env.input("samplerate"_s) = sr;
+        }
+        void setBase(float hz)
+        {
+            m_base.input("value"_s) = hz;
+        }
+        void setAmount(float hz)
+        {
+            m_amount.input("value"_s) = hz;
+        }
     };
 
     // Attack envelope — shared ADSR for FM and AM burst at note onset
@@ -210,11 +251,31 @@ public:
         {
         }
 
-        void setAttack(float t) { for (auto* e : m_envs) e->input("attack"_s) = t; }
-        void setDecay(float t) { for (auto* e : m_envs) e->input("decay"_s) = t; }
-        void setSustain(float s) { for (auto* e : m_envs) e->input("sustain"_s) = s; }
-        void setRelease(float t) { for (auto* e : m_envs) e->input("release"_s) = t; }
-        void setSampleRate(float sr) { for (auto* e : m_envs) e->input("samplerate"_s) = sr; }
+        void setAttack(float t)
+        {
+            for (auto* e : m_envs)
+                e->input("attack"_s) = t;
+        }
+        void setDecay(float t)
+        {
+            for (auto* e : m_envs)
+                e->input("decay"_s) = t;
+        }
+        void setSustain(float s)
+        {
+            for (auto* e : m_envs)
+                e->input("sustain"_s) = s;
+        }
+        void setRelease(float t)
+        {
+            for (auto* e : m_envs)
+                e->input("release"_s) = t;
+        }
+        void setSampleRate(float sr)
+        {
+            for (auto* e : m_envs)
+                e->input("samplerate"_s) = sr;
+        }
     };
 
     class Operator
@@ -248,7 +309,10 @@ public:
             return m_op.input("frequency"_s).input("y"_s);
         }
 
-        void setFreq(float hz) { getFreq() = hz; }
+        void setFreq(float hz)
+        {
+            getFreq() = hz;
+        }
         void setCarrierLevel(float level)
         {
             m_op.input("gain"_s).input("x"_s).input("value"_s) = level;
@@ -286,9 +350,18 @@ public:
         {
             getFreqOp().input("gain"_s).input("y"_s).input("y"_s).input("value"_s) = amount;
         }
-        void setSampleRate(float sr) { m_op.input("samplerate"_s) = sr; }
-        void setShape(Graph::shape s) { m_op.input("shape"_s) = s; }
-        void setPhase(float p) { m_op.input("phase"_s).input("value"_s) = p; }
+        void setSampleRate(float sr)
+        {
+            m_op.input("samplerate"_s) = sr;
+        }
+        void setShape(Graph::shape s)
+        {
+            m_op.input("shape"_s) = s;
+        }
+        void setPhase(float p)
+        {
+            m_op.input("phase"_s).input("value"_s) = p;
+        }
     };
 
     class Filter
@@ -321,11 +394,26 @@ public:
         {
         }
 
-        void setRate(float hz) { m_phaser.input("frequency"_s).input("value"_s) = hz; }
-        void setDepth(float d) { m_phaser.input("depth"_s).input("value"_s) = d; }
-        void setFeedback(float fb) { m_phaser.input("feedback"_s).input("value"_s) = fb; }
-        void setWet(float w) { m_phaser.input("wet"_s).input("value"_s) = w; }
-        void setSampleRate(float sr) { m_phaser.input("samplerate"_s) = sr; }
+        void setRate(float hz)
+        {
+            m_phaser.input("frequency"_s).input("value"_s) = hz;
+        }
+        void setDepth(float d)
+        {
+            m_phaser.input("depth"_s).input("value"_s) = d;
+        }
+        void setFeedback(float fb)
+        {
+            m_phaser.input("feedback"_s).input("value"_s) = fb;
+        }
+        void setWet(float w)
+        {
+            m_phaser.input("wet"_s).input("value"_s) = w;
+        }
+        void setSampleRate(float sr)
+        {
+            m_phaser.input("samplerate"_s) = sr;
+        }
     };
 
     Synth(size_t bufferSize, float samplerate);
@@ -341,32 +429,107 @@ public:
                             .input("signal"_s)};
     }
 
+    template <size_t N>
+    void setBusGain(float gain)
+    {
+        m_graph.input("signal"_s)
+            .input("signal"_s)
+            .input("signal"_s)
+            .input("y"_s)
+            .input<N>()
+            .input("gain"_s)
+            .input("value"_s) = gain;
+    }
+
     auto attackEnvPtrs()
     {
         auto& mixer = m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s);
         // FM envelopes (5) + AM envelopes (5)
         return std::array<Graph::envelope_t*, 10>{
             // FM: operator.frequency.y (fm_mod_osc).gain.y.x (envelope)
-            &mixer.input<0>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<1>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<2>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<3>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<4>().input("signal"_s).input("frequency"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
+            &mixer.input<0>()
+                 .input("signal"_s)
+                 .input("frequency"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<1>()
+                 .input("signal"_s)
+                 .input("frequency"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<2>()
+                 .input("signal"_s)
+                 .input("frequency"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<3>()
+                 .input("signal"_s)
+                 .input("frequency"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<4>()
+                 .input("signal"_s)
+                 .input("frequency"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
             // AM: operator.gain.y (am_osc).gain.y.x (envelope)
-            &mixer.input<0>().input("signal"_s).input("gain"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<1>().input("signal"_s).input("gain"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<2>().input("signal"_s).input("gain"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<3>().input("signal"_s).input("gain"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s),
-            &mixer.input<4>().input("signal"_s).input("gain"_s).input("y"_s).input("gain"_s).input("y"_s).input("x"_s)};
+            &mixer.input<0>()
+                 .input("signal"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<1>()
+                 .input("signal"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<2>()
+                 .input("signal"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<3>()
+                 .input("signal"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s),
+            &mixer.input<4>()
+                 .input("signal"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("gain"_s)
+                 .input("y"_s)
+                 .input("x"_s)};
     }
 
     auto envelope()
     {
         // amplitude envelope, filter envelope, and attack envelopes (FM + AM)
-        return Envelope{
-            m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("x"_s),
-            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
-            attackEnvPtrs()};
+        return Envelope{m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("x"_s),
+                        m_graph.input("signal"_s)
+                            .input("signal"_s)
+                            .input("frequency"_s)
+                            .input("y"_s)
+                            .input("x"_s),
+                        attackEnvPtrs()};
     }
 
     auto attackEnvelope()
@@ -377,9 +540,17 @@ public:
     auto filterEnvelope()
     {
         return FilterEnvelope{
-            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("y"_s).input("x"_s),
+            m_graph.input("signal"_s)
+                .input("signal"_s)
+                .input("frequency"_s)
+                .input("y"_s)
+                .input("x"_s),
             m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("x"_s),
-            m_graph.input("signal"_s).input("signal"_s).input("frequency"_s).input("y"_s).input("y"_s)};
+            m_graph.input("signal"_s)
+                .input("signal"_s)
+                .input("frequency"_s)
+                .input("y"_s)
+                .input("y"_s)};
     }
 
     auto filter()
@@ -402,13 +573,24 @@ public:
         {
         }
 
-        void setGain(float g) { m_noise.input("gain"_s).input("value"_s) = g; }
-        void setColor(Graph::noise_gen_t::Color c) { m_noise.input("color"_s) = c; }
+        void setGain(float g)
+        {
+            m_noise.input("gain"_s).input("value"_s) = g;
+        }
+        void setColor(Graph::noise_gen_t::Color c)
+        {
+            m_noise.input("color"_s) = c;
+        }
     };
 
     auto noise()
     {
-        return Noise{m_graph.input("signal"_s).input("signal"_s).input("signal"_s).input("y"_s).input<5>().input("signal"_s)};
+        return Noise{m_graph.input("signal"_s)
+                         .input("signal"_s)
+                         .input("signal"_s)
+                         .input("y"_s)
+                         .input<5>()
+                         .input("signal"_s)};
     }
 
     class EQ
@@ -421,11 +603,26 @@ public:
         {
         }
 
-        void setFrequency(float hz) { m_eq.input("frequency"_s).input("value"_s) = hz; }
-        void setQ(float q) { m_eq.input("Q"_s).input("value"_s) = q; }
-        void setGainDb(float db) { m_eq.input("gainDb"_s).input("value"_s) = db; }
-        void setType(Graph::biquad_filter_t::Type t) { m_eq.input("type"_s) = t; }
-        void setSampleRate(float sr) { m_eq.input("samplerate"_s) = sr; }
+        void setFrequency(float hz)
+        {
+            m_eq.input("frequency"_s).input("value"_s) = hz;
+        }
+        void setQ(float q)
+        {
+            m_eq.input("Q"_s).input("value"_s) = q;
+        }
+        void setGainDb(float db)
+        {
+            m_eq.input("gainDb"_s).input("value"_s) = db;
+        }
+        void setType(Graph::biquad_filter_t::Type t)
+        {
+            m_eq.input("type"_s) = t;
+        }
+        void setSampleRate(float sr)
+        {
+            m_eq.input("samplerate"_s) = sr;
+        }
     };
 
     auto eq()
