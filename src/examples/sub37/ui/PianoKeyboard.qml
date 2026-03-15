@@ -9,7 +9,7 @@ Item {
     property int octaveOffset: 0
     readonly property int baseStart: 48
     readonly property int startNote: baseStart + octaveOffset * 12
-    readonly property int endNote: startNote + 24
+    readonly property int endNote: startNote + 48
     readonly property int whiteKeyCount: {
         var count = 0;
         for (var n = startNote; n <= endNote; ++n) {

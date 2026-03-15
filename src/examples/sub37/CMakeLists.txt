@@ -22,6 +22,7 @@ if (Qt6_FOUND)
             ui/ModulationPanel.qml
             ui/PianoKeyboard.qml
             ui/RotarySlider.qml
+            ui/SmallRadioButton.qml
         SOURCES
             ui/SynthBridge.h
             ui/SynthBridge.cpp

@@ -40,97 +40,76 @@ ColumnLayout {
         onMoved: root.value = dial.value
 
         background: Item {
+            id: bg
             x: dial.width / 2 - width / 2
             y: dial.height / 2 - height / 2
-            width: 58
-            height: 58
+            width: 60
+            height: 60
 
-            // Outer shadow ring
-            Rectangle {
+            // Outer track arc with gap at bottom
+            Canvas {
                 anchors.fill: parent
-                radius: width / 2
-                color: "transparent"
-                border.color: "#1a1a1a"
-                border.width: 2
-            }
-
-            // Knurled edge (tick marks around the perimeter)
-            Repeater {
-                model: 32
-                Rectangle {
-                    readonly property real a: index * (2 * Math.PI / 32)
-                    readonly property real r: parent.width / 2
-                    x: parent.width / 2 + (r - 1.5) * Math.cos(a) - 0.5
-                    y: parent.height / 2 + (r - 1.5) * Math.sin(a) - 0.5
-                    width: 1
-                    height: 1
-                    radius: 0.5
-                    color: "#555555"
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.reset();
+                    var cx = width / 2, cy = height / 2;
+                    var r = width / 2 - 2;
+                    ctx.strokeStyle = "#555555";
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = "round";
+                    ctx.beginPath();
+                    // Arc from 130° to 50° (clockwise through top), leaving 80° gap at bottom
+                    ctx.arc(cx, cy, r, 130 * Math.PI / 180, 50 * Math.PI / 180, false);
+                    ctx.stroke();
                 }
             }
 
-            // Main knob body — layered for metallic look
+            // Knob body
             Rectangle {
+                id: knobBody
                 anchors.centerIn: parent
-                width: parent.width - 6
-                height: parent.height - 6
+                width: parent.width - 8
+                height: parent.height - 8
                 radius: width / 2
-                color: "#353535"
-                border.color: "#444444"
-                border.width: 0.5
+                color: "#1a1a1a"
+                border.color: "#2a2a2a"
+                border.width: 1
             }
 
-            // Highlight (upper-left light reflection)
+            // Inner cap ring
             Rectangle {
+                id: innerRing
                 anchors.centerIn: parent
-                anchors.horizontalCenterOffset: -3
-                anchors.verticalCenterOffset: -3
-                width: parent.width - 16
-                height: parent.height - 16
+                width: parent.width * 0.42
+                height: width
                 radius: width / 2
-                color: "#404040"
-                opacity: 0.6
-            }
-
-            // Inner cap (slightly raised center)
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - 22
-                height: parent.height - 22
-                radius: width / 2
-                color: "#2e2e2e"
-                border.color: "#3d3d3d"
-                border.width: 0.5
+                color: "transparent"
+                border.color: "#c0c0c0"
+                border.width: 2
             }
         }
 
         handle: Item {
             id: handleItem
-            readonly property real angleRad: dial.angle * Math.PI / 180
-            readonly property real orbitRadius: 0
-            readonly property real centerX: dial.background.x + dial.background.width / 2
-            readonly property real centerY: dial.background.y + dial.background.height / 2
+            x: bg.x + bg.width / 2 - width / 2
+            y: bg.y + bg.height / 2 - height / 2
+            width: knobBody.width
+            height: knobBody.height
 
-            x: centerX - width / 2
-            y: centerY - height / 2
-            width: dial.background.width - 6
-            height: dial.background.height - 6
-
-            // White indicator line from center toward edge
+            // Indicator line from near-edge to center
             Rectangle {
-                readonly property real lineLen: parent.width / 2 - 4
-                readonly property real angleRad: handleItem.angleRad
-                x: parent.width / 2 + (lineLen * 0.35) * Math.sin(angleRad) - width / 2
-                y: parent.height / 2 - (lineLen * 0.35) * Math.cos(angleRad) - height / 2
-                width: 2.5
-                height: lineLen * 0.65
-                radius: 1.25
-                color: "#e0e0e0"
+                id: indicator
+                x: handleItem.width / 2 - width / 2
+                y: 3
+                width: 3
+                height: handleItem.height / 2 - 3
+                radius: 1.5
+                color: "#c0c0c0"
                 antialiasing: true
                 transform: Rotation {
-                    origin.x: 1.25
-                    origin.y: 0
-                    angle: handleItem.angleRad * 180 / Math.PI
+                    origin.x: indicator.width / 2
+                    origin.y: handleItem.height / 2 - indicator.y
+                    angle: dial.angle
                 }
             }
         }

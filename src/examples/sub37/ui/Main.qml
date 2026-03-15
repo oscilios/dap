@@ -6,8 +6,8 @@ import Sub37
 ApplicationWindow {
     id: window
     visible: true
-    width: 860
-    height: 640
+    width: 1280
+    height: 520
     title: "Sub 37 — Paraphonic Analog Synthesizer"
     color: "#181818"
 
@@ -16,10 +16,10 @@ ApplicationWindow {
         anchors.margins: 0
         spacing: 0
 
-        // Header bar — Moog-style branding
+        // Header bar
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 36
+            Layout.preferredHeight: 32
             color: "#0d0d0d"
 
             RowLayout {
@@ -29,7 +29,7 @@ ApplicationWindow {
 
                 Label {
                     text: "SUB 37"
-                    font.pixelSize: 16
+                    font.pixelSize: 14
                     font.family: "Helvetica Neue"
                     font.weight: Font.Bold
                     font.letterSpacing: 4
@@ -45,7 +45,6 @@ ApplicationWindow {
                 }
             }
 
-            // Bottom accent line
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
@@ -54,76 +53,41 @@ ApplicationWindow {
             }
         }
 
-        // Main panel area
+        // All controls
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.margins: 10
-            spacing: 8
+            Layout.margins: 8
+            spacing: 6
 
-            TabBar {
-                id: tabBar
+            // Row 1: Oscillators + Modulation
+            OscillatorPanel {
                 Layout.fillWidth: true
-                background: Rectangle { color: "#141414" }
-
-                Repeater {
-                    model: ["OSCILLATORS", "FILTER", "AMP ENVELOPE", "MODULATION"]
-                    TabButton {
-                        text: modelData
-                        font.pixelSize: 10
-                        font.family: "Helvetica Neue"
-                        font.letterSpacing: 1.5
-                        font.weight: Font.Medium
-
-                        background: Rectangle {
-                            color: parent.checked ? "#2a2a2a" : "#141414"
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: 2
-                                color: parent.parent.checked ? "#d4a017" : "transparent"
-                            }
-                        }
-                        contentItem: Label {
-                            text: parent.text
-                            font: parent.font
-                            color: parent.checked ? "#e0e0e0" : "#666666"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                }
             }
 
-            // Panel background
-            Rectangle {
+            // Row 2: Modulation + Amp Envelope
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                color: "#1c1c1c"
-                radius: 2
-                border.color: "#2a2a2a"
-                border.width: 1
+                spacing: 8
 
-                StackLayout {
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    currentIndex: tabBar.currentIndex
-
-                    OscillatorPanel {}
-                    FilterPanel {}
-                    EnvelopePanel {}
-                    ModulationPanel {}
+                ModulationPanel {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                EnvelopePanel {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
             }
         }
 
-        // Piano keyboard — dark walnut-style surround
+        // Piano keyboard
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 130
-            Layout.leftMargin: 10
-            Layout.rightMargin: 10
-            Layout.bottomMargin: 10
+            Layout.preferredHeight: 110
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            Layout.bottomMargin: 8
             color: "#1a1510"
             radius: 4
             border.color: "#2a2520"

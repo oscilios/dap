@@ -3,48 +3,66 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Sub37
 
-ScrollView {
-    contentWidth: availableWidth
+GroupBox {
+    title: "MODULATION"
+    label: Label {
+        text: parent.title
+        color: "#d4a017"
+        font.pixelSize: 10
+        font.family: "Helvetica Neue"
+        font.letterSpacing: 2
+        font.weight: Font.Medium
+        leftPadding: 8
+    }
+    background: Rectangle {
+        color: "transparent"
+        border.color: "#333333"
+        border.width: 1
+        radius: 3
+        y: parent.topPadding - parent.bottomPadding
+        height: parent.height - parent.topPadding + parent.bottomPadding
+    }
 
-    ColumnLayout {
-        width: parent.width
-        spacing: 16
+    RowLayout {
+        spacing: 10
 
-        // Mod 1: Pitch LFO
-        GroupBox {
-            title: "Mod 1 — Pitch LFO"
-            Layout.fillWidth: true
-            ColumnLayout {
+        // Pitch LFO
+        ColumnLayout {
+            spacing: 2
+            Label {
+                text: "Pitch LFO"
+                color: "#b0b0b0"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                Layout.alignment: Qt.AlignHCenter
+            }
+            RowLayout {
                 spacing: 8
-                RowLayout {
-                    spacing: 12
-                    RotarySlider {
-                        label: "Rate (Hz)"
-                        from: 0.1; to: 20; value: SynthBridge.pitchLfoRate
-                        stepSize: 0.1; decimals: 1
-                        onValueChanged: SynthBridge.pitchLfoRate = value
-                    }
-                    RotarySlider {
-                        label: "Depth (Hz)"
-                        from: 0; to: 50; value: SynthBridge.pitchLfoDepth
-                        stepSize: 0.1; decimals: 1
-                        onValueChanged: SynthBridge.pitchLfoDepth = value
-                    }
+                RotarySlider {
+                    label: "Rate"
+                    from: 0.1; to: 20; value: SynthBridge.pitchLfoRate
+                    stepSize: 0.1; decimals: 1
+                    onValueChanged: SynthBridge.pitchLfoRate = value
                 }
-                RowLayout {
-                    spacing: 8
-                    Label { text: "Shape:"; color: "#cccccc"; font.pixelSize: 12 }
+                RotarySlider {
+                    label: "Depth"
+                    from: 0; to: 50; value: SynthBridge.pitchLfoDepth
+                    stepSize: 0.1; decimals: 1
+                    onValueChanged: SynthBridge.pitchLfoDepth = value
+                }
+                ColumnLayout {
+                    spacing: 1
                     Repeater {
-                        model: ["Sine", "Square", "Saw", "InvSaw", "Triangle"]
-                        RadioButton {
-                            text: modelData
+                        model: ["Sine", "Square", "Saw", "InvSaw", "Tri"]
+                        SmallRadioButton {
                             checked: SynthBridge.pitchLfoShape === index
                             onClicked: SynthBridge.pitchLfoShape = index
                             contentItem: Label {
-                                text: parent.text
-                                color: "#cccccc"
-                                font.pixelSize: 11
-                                leftPadding: parent.indicator.width + 4
+                                text: modelData
+                                color: parent.checked ? "#e0e0e0" : "#777777"
+                                font.pixelSize: 10
+                                leftPadding: parent.indicator.width + 2
+                                verticalAlignment: Text.AlignVCenter
                             }
                         }
                     }
@@ -52,41 +70,45 @@ ScrollView {
             }
         }
 
-        // Mod 2: Filter LFO
-        GroupBox {
-            title: "Mod 2 — Filter LFO"
-            Layout.fillWidth: true
-            ColumnLayout {
+        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
+
+        // Filter LFO
+        ColumnLayout {
+            spacing: 2
+            Label {
+                text: "Filter LFO"
+                color: "#b0b0b0"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                Layout.alignment: Qt.AlignHCenter
+            }
+            RowLayout {
                 spacing: 8
-                RowLayout {
-                    spacing: 12
-                    RotarySlider {
-                        label: "Rate (Hz)"
-                        from: 0.1; to: 20; value: SynthBridge.filterLfoRate
-                        stepSize: 0.1; decimals: 1
-                        onValueChanged: SynthBridge.filterLfoRate = value
-                    }
-                    RotarySlider {
-                        label: "Depth (Hz)"
-                        from: 0; to: 5000; value: SynthBridge.filterLfoDepth
-                        stepSize: 10; decimals: 0
-                        onValueChanged: SynthBridge.filterLfoDepth = value
-                    }
+                RotarySlider {
+                    label: "Rate"
+                    from: 0.1; to: 20; value: SynthBridge.filterLfoRate
+                    stepSize: 0.1; decimals: 1
+                    onValueChanged: SynthBridge.filterLfoRate = value
                 }
-                RowLayout {
-                    spacing: 8
-                    Label { text: "Shape:"; color: "#cccccc"; font.pixelSize: 12 }
+                RotarySlider {
+                    label: "Depth"
+                    from: 0; to: 5000; value: SynthBridge.filterLfoDepth
+                    stepSize: 10; decimals: 0
+                    onValueChanged: SynthBridge.filterLfoDepth = value
+                }
+                ColumnLayout {
+                    spacing: 1
                     Repeater {
-                        model: ["Sine", "Square", "Saw", "InvSaw", "Triangle"]
-                        RadioButton {
-                            text: modelData
+                        model: ["Sine", "Square", "Saw", "InvSaw", "Tri"]
+                        SmallRadioButton {
                             checked: SynthBridge.filterLfoShape === index
                             onClicked: SynthBridge.filterLfoShape = index
                             contentItem: Label {
-                                text: parent.text
-                                color: "#cccccc"
-                                font.pixelSize: 11
-                                leftPadding: parent.indicator.width + 4
+                                text: modelData
+                                color: parent.checked ? "#e0e0e0" : "#777777"
+                                font.pixelSize: 10
+                                leftPadding: parent.indicator.width + 2
+                                verticalAlignment: Text.AlignVCenter
                             }
                         }
                     }
@@ -94,18 +116,23 @@ ScrollView {
             }
         }
 
+        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
+
         // Glide
-        GroupBox {
-            title: "Glide"
-            Layout.fillWidth: true
-            RowLayout {
-                spacing: 12
-                RotarySlider {
-                    label: "Time (s)"
-                    from: 0; to: 2; value: SynthBridge.glideTime
-                    stepSize: 0.01; decimals: 2
-                    onValueChanged: SynthBridge.glideTime = value
-                }
+        ColumnLayout {
+            spacing: 2
+            Label {
+                text: "Glide"
+                color: "#b0b0b0"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                Layout.alignment: Qt.AlignHCenter
+            }
+            RotarySlider {
+                label: "Time"
+                from: 0; to: 2; value: SynthBridge.glideTime
+                stepSize: 0.01; decimals: 2
+                onValueChanged: SynthBridge.glideTime = value
             }
         }
     }
