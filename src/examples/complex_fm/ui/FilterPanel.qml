@@ -17,6 +17,12 @@ ScrollView {
             RowLayout {
                 spacing: 12
                 RotarySlider {
+                    label: "Frequency"
+                    from: 20; to: 5000; value: SynthBridge.filterEnvBase
+                    stepSize: 10; decimals: 0
+                    onValueChanged: SynthBridge.filterEnvBase = value
+                }
+                RotarySlider {
                     label: "Resonance"
                     from: 0; to: 1; value: SynthBridge.filterResonance
                     onValueChanged: SynthBridge.filterResonance = value

@@ -2,6 +2,7 @@
 #include "AudioProcess.h"
 #include "ComplexFMSynth.h"
 #include "audioio/AudioDeviceList.h"
+#include <QTimer>
 #include <cmath>
 
 SynthBridge::SynthBridge(QObject* parent)
@@ -159,9 +160,23 @@ void SynthBridge::noteOn(int midiNote)
     if (!m_synth)
         return;
     m_fundamental = 440.0f * std::pow(2.0f, (midiNote - 69) / 12.0f);
-    m_noteActive  = true;
     updatePartialFrequencies(m_fundamental);
-    m_synth->envelope().setGate(1.0f);
+
+    if (m_noteActive)
+    {
+        // Retrigger: gate off, then gate on after the audio thread has processed
+        // at least one buffer so the envelope sees the low→high transition
+        m_synth->envelope().setGate(0.0f);
+        QTimer::singleShot(5, this, [this]() {
+            if (m_synth && m_noteActive)
+                m_synth->envelope().setGate(1.0f);
+        });
+    }
+    else
+    {
+        m_synth->envelope().setGate(1.0f);
+    }
+    m_noteActive = true;
 }
 
 void SynthBridge::noteOff()
