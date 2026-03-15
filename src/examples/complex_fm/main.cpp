@@ -1,23 +1,103 @@
 #include "AudioProcess.h"
 #include "audioio/AudioDeviceList.h"
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <thread>
 
+#if DAP_HAS_QT
+#include "SynthBridge.h"
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQuickStyle>
+#endif
+
 using namespace dap::audioio;
+
+static void listDevices()
+{
+    const auto devices = AudioDeviceList::create(dap::audioio::Scope::Output);
+    std::cout << "Available output devices:" << std::endl;
+    for (std::size_t i = 0; i < devices.size(); ++i)
+    {
+        std::cout << "  " << i << ": " << devices[i]->getName() << std::endl;
+    }
+}
+
+static int parseDeviceIndex(int argc, char** argv)
+{
+    for (int i = 1; i < argc - 1; ++i)
+    {
+        if (std::strcmp(argv[i], "--device") == 0)
+            return std::atoi(argv[i + 1]);
+    }
+    return 0;
+}
+
+static int runMelody(int argc, char** argv);
+
+#if DAP_HAS_QT
+static int runGui(int argc, char** argv);
+#endif
 
 int main(int argc, char** argv)
 {
+    for (int i = 1; i < argc; ++i)
+    {
+        if (std::strcmp(argv[i], "--list-devices") == 0)
+        {
+            listDevices();
+            return 0;
+        }
+    }
+
+#if DAP_HAS_QT
+    bool noGui = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (std::strcmp(argv[i], "--no-gui") == 0)
+        {
+            noGui = true;
+            break;
+        }
+    }
+    if (!noGui)
+        return runGui(argc, argv);
+#endif
+    return runMelody(argc, argv);
+}
+
+#if DAP_HAS_QT
+static int runGui(int argc, char** argv)
+{
+    QGuiApplication app(argc, argv);
+    QQuickStyle::setStyle("Basic");
+
+    int deviceIdx = parseDeviceIndex(argc, argv);
+
+    QQmlApplicationEngine engine;
+
+    // Set device index on the singleton before QML loads
+    engine.singletonInstance<SynthBridge*>("ComplexFM", "SynthBridge")->setDeviceIndex(deviceIdx);
+
+    engine.loadFromModule("ComplexFM", "Main");
+
+    if (engine.rootObjects().isEmpty())
+        return -1;
+
+    return app.exec();
+}
+#endif
+
+static int runMelody(int argc, char** argv)
+{
     const auto outputDevices   = AudioDeviceList::create(dap::audioio::Scope::Output);
-    const auto outputDeviceIdx = argc > 1 ? std::size_t(std::atoi(argv[1])) : 0u;
+    const auto outputDeviceIdx = static_cast<std::size_t>(parseDeviceIndex(argc, argv));
 
     if (outputDeviceIdx >= outputDevices.size())
     {
-        std::cout << "Invalid output device index. Available output devices:" << std::endl;
-        for (auto& device : outputDevices)
-        {
-            std::cout << device->getName() << std::endl;
-        }
+        std::cout << "Invalid output device index." << std::endl;
+        listDevices();
         return -1;
     }
 
@@ -142,7 +222,7 @@ int main(int argc, char** argv)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Play a simple melody
-    std::cout << "\nPlaying ... "<< std::endl;
+    std::cout << "\nPlaying ... " << std::endl;
 
     // Define note frequencies relative to base frequency (196 Hz = G3)
     float baseFreq = 196.0f;
@@ -211,33 +291,33 @@ int main(int argc, char** argv)
     };
 
     // Lower register: G3 scale up and back down
-    playNote(1.0f, 3000);    // G3
-    playNote(1.125f, 3000);  // A3
-    playNote(1.26f, 3000);   // B3
-    playNote(1.335f, 3000);  // C4
-    playNote(1.5f, 3000);    // D4
-    playNote(1.68f, 3000);   // E4
-    playNote(1.5f, 3000);    // D4
-    playNote(1.335f, 3000);  // C4
-    playNote(1.26f, 3000);   // B3
-    playNote(1.125f, 3000);  // A3
-    playNote(1.0f, 3500);    // G3
+    playNote(1.0f, 3000);   // G3
+    playNote(1.125f, 3000); // A3
+    playNote(1.26f, 3000);  // B3
+    playNote(1.335f, 3000); // C4
+    playNote(1.5f, 3000);   // D4
+    playNote(1.68f, 3000);  // E4
+    playNote(1.5f, 3000);   // D4
+    playNote(1.335f, 3000); // C4
+    playNote(1.26f, 3000);  // B3
+    playNote(1.125f, 3000); // A3
+    playNote(1.0f, 3500);   // G3
 
     // Higher octave phrase: G4 - A4 - B4 - D5 - B4 - A4 - G4
-    playNote(2.0f, 3000);    // G4
-    playNote(2.25f, 3000);   // A4
-    playNote(2.52f, 3000);   // B4
-    playNote(3.0f, 3500);    // D5
-    playNote(2.52f, 3000);   // B4
-    playNote(2.25f, 3000);   // A4
-    playNote(2.0f, 3500);    // G4
+    playNote(2.0f, 3000);  // G4
+    playNote(2.25f, 3000); // A4
+    playNote(2.52f, 3000); // B4
+    playNote(3.0f, 3500);  // D5
+    playNote(2.52f, 3000); // B4
+    playNote(2.25f, 3000); // A4
+    playNote(2.0f, 3500);  // G4
 
     // Final cadence: D4 - G3 - B3 - D4 - G4
-    playNote(1.5f, 3000);    // D4
-    playNote(1.0f, 3000);    // G3
-    playNote(1.26f, 3000);   // B3
-    playNote(1.5f, 3500);    // D4
-    playNote(2.0f, 6000);    // G4 (final note - high)
+    playNote(1.5f, 3000);  // D4
+    playNote(1.0f, 3000);  // G3
+    playNote(1.26f, 3000); // B3
+    playNote(1.5f, 3500);  // D4
+    playNote(2.0f, 6000);  // G4 (final note - high)
 
     [[maybe_unused]] const bool stopped = process.stop();
     assert(stopped);
