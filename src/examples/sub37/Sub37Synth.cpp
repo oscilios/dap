@@ -75,4 +75,8 @@ sub37::Synth::Synth(size_t bufferSize, float samplerate)
     filterEnvelope().setDecay(0.4f);
     filterEnvelope().setSustain(0.0f);
     filterEnvelope().setRelease(0.2f);
+
+    // --- Feedback delay: off by default ---
+    setDelayTime(0.0f);
+    setFeedback(0.0f);
 }

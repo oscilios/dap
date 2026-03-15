@@ -72,6 +72,9 @@ void SynthBridge::initAudioDevice(int deviceIdx)
     m_synth->filter().setLfoDepth(m_filterLfoDepth);
     m_synth->filter().setLfoShape(static_cast<Shape>(m_filterLfoShape));
 
+    m_synth->setDelayTime(m_delayTime * m_sampleRate);
+    m_synth->setFeedback(m_feedback);
+
     auto glideSamples = static_cast<size_t>(m_glideTime * m_sampleRate);
     m_synth->setGlide(glideSamples);
 }
@@ -327,6 +330,27 @@ void SynthBridge::setFilterLfoShape(int v)
         m_synth->filter().setLfoShape(static_cast<Shape>(v));
     }
     emit filterLfoShapeChanged();
+}
+
+// Feedback delay (seconds → samples)
+void SynthBridge::setDelayTime(float v)
+{
+    if (qFuzzyCompare(m_delayTime, v))
+        return;
+    m_delayTime = v;
+    if (m_synth)
+        m_synth->setDelayTime(v * m_sampleRate);
+    emit delayTimeChanged();
+}
+
+void SynthBridge::setFeedback(float v)
+{
+    if (qFuzzyCompare(m_feedback, v))
+        return;
+    m_feedback = v;
+    if (m_synth)
+        m_synth->setFeedback(v);
+    emit feedbackChanged();
 }
 
 // Glide time (seconds → samples)

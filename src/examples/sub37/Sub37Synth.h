@@ -2,6 +2,7 @@
 #include "base/KeyValueTuple.h"
 #include "crtp/nodes/Processor.h"
 #include "dsp/EnvelopeGenerator.h"
+#include "dsp/CombFilter.h"
 #include "dsp/LadderFilter.h"
 #include "dsp/Mixer.h"
 #include "dsp/NoiseGenerator.h"
@@ -100,8 +101,15 @@ class sub37::Synth final
                              "resonance"_s,
                              "samplerate"_s));
 
+        // Feedback comb filter (65536 samples ≈ 1.5s at 44.1kHz)
+        template <typename T>
+        using feedback_t = decltype(processor<dap::dsp::FeedbackCombFilter<scalar_t, 65536>>::
+                                        with_inputs<T, control_t, control_t>::named("input"_s,
+                                                                                    "delay"_s,
+                                                                                    "feedback"_s));
+
         // Final output type
-        using type  = filter_t<osc_output_t>;
+        using type  = feedback_t<filter_t<osc_output_t>>;
         using shape = shape_t;
     };
 
@@ -263,45 +271,47 @@ public:
     };
 
     // --- Filter (resonance + LFO mod) ---
+    using filter_node_t = Graph::filter_t<Graph::osc_output_t>;
+
     class Filter
     {
-        Graph::type& m_graph;
+        filter_node_t& m_filter;
 
     public:
-        Filter(Graph::type& graph)
-        : m_graph(graph)
+        Filter(filter_node_t& filter)
+        : m_filter(filter)
         {
         }
 
         void setResonance(float r)
         {
-            m_graph.input("resonance"_s).input("value"_s) = r;
+            m_filter.input("resonance"_s).input("value"_s) = r;
         }
         void setSampleRate(float sr)
         {
-            m_graph.input("samplerate"_s) = sr;
+            m_filter.input("samplerate"_s) = sr;
         }
 
         // Filter LFO (mod 2)
         void setLfoRate(float hz)
         {
-            m_graph.input("frequency"_s).input("y"_s).input("frequency"_s).input("value"_s) = hz;
+            m_filter.input("frequency"_s).input("y"_s).input("frequency"_s).input("value"_s) = hz;
         }
         void setLfoDepth(float d)
         {
-            m_graph.input("frequency"_s).input("y"_s).input("gain"_s).input("value"_s) = d;
+            m_filter.input("frequency"_s).input("y"_s).input("gain"_s).input("value"_s) = d;
         }
         void setLfoShape(Graph::shape s)
         {
-            m_graph.input("frequency"_s).input("y"_s).input("shape"_s) = s;
+            m_filter.input("frequency"_s).input("y"_s).input("shape"_s) = s;
         }
         void setLfoSampleRate(float sr)
         {
-            m_graph.input("frequency"_s).input("y"_s).input("samplerate"_s) = sr;
+            m_filter.input("frequency"_s).input("y"_s).input("samplerate"_s) = sr;
         }
         void setLfoPhase(float p)
         {
-            m_graph.input("frequency"_s).input("y"_s).input("phase"_s).input("value"_s) = p;
+            m_filter.input("frequency"_s).input("y"_s).input("phase"_s).input("value"_s) = p;
         }
     };
 
@@ -329,10 +339,15 @@ public:
     Synth(size_t bufferSize, float samplerate);
 
     // Oscillator accessors (bus 0=osc1, 1=osc2, 2=sub)
+    auto& filterNode()
+    {
+        return m_graph.input("input"_s);
+    }
+
     template <size_t N>
     auto oscControl()
     {
-        auto& mixer = m_graph.input("signal"_s).input("y"_s);
+        auto& mixer = filterNode().input("signal"_s).input("y"_s);
         return OscControl{mixer.template input<N>().input("signal"_s),
                           mixer.template input<N>().input("gain"_s)};
     }
@@ -353,7 +368,8 @@ public:
     template <size_t N>
     void setBusGain(float gain)
     {
-        m_graph.input("signal"_s)
+        filterNode()
+            .input("signal"_s)
             .input("y"_s)
             .template input<N>()
             .input("gain"_s)
@@ -362,25 +378,38 @@ public:
 
     auto envelope()
     {
-        return AmpEnvelope{m_graph.input("signal"_s).input("x"_s),
-                           m_graph.input("frequency"_s).input("x"_s).input("y"_s).input("x"_s)};
+        return AmpEnvelope{
+            filterNode().input("signal"_s).input("x"_s),
+            filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("x"_s)};
     }
 
     auto filterEnvelope()
     {
-        return FilterEnvelope{m_graph.input("frequency"_s).input("x"_s).input("y"_s).input("x"_s),
-                              m_graph.input("frequency"_s).input("x"_s).input("x"_s),
-                              m_graph.input("frequency"_s).input("x"_s).input("y"_s).input("y"_s)};
+        return FilterEnvelope{
+            filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("x"_s),
+            filterNode().input("frequency"_s).input("x"_s).input("x"_s),
+            filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("y"_s)};
     }
 
     auto filter()
     {
-        return Filter{m_graph};
+        return Filter{filterNode()};
     }
 
     auto noise()
     {
-        return Noise{m_graph.input("signal"_s).input("y"_s).template input<3>().input("signal"_s)};
+        return Noise{
+            filterNode().input("signal"_s).input("y"_s).template input<3>().input("signal"_s)};
+    }
+
+    // Feedback delay line controls
+    void setDelayTime(float samples)
+    {
+        m_graph.input("delay"_s).input("value"_s) = samples;
+    }
+    void setFeedback(float fb)
+    {
+        m_graph.input("feedback"_s).input("value"_s) = fb;
     }
 
     // Osc2 beat frequency (detune in Hz relative to osc1)

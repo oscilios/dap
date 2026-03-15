@@ -76,6 +76,10 @@ class SynthBridge : public QObject
     Q_PROPERTY(
         int filterLfoShape READ filterLfoShape WRITE setFilterLfoShape NOTIFY filterLfoShapeChanged)
 
+    // Feedback delay
+    Q_PROPERTY(float delayTime READ delayTime WRITE setDelayTime NOTIFY delayTimeChanged)
+    Q_PROPERTY(float feedback READ feedback WRITE setFeedback NOTIFY feedbackChanged)
+
     // Glide
     Q_PROPERTY(float glideTime READ glideTime WRITE setGlideTime NOTIFY glideTimeChanged)
 
@@ -208,6 +212,15 @@ public:
         return m_filterLfoShape;
     }
 
+    float delayTime() const
+    {
+        return m_delayTime;
+    }
+    float feedback() const
+    {
+        return m_feedback;
+    }
+
     float glideTime() const
     {
         return m_glideTime;
@@ -258,6 +271,9 @@ public slots:
     void setFilterLfoDepth(float v);
     void setFilterLfoShape(int v);
 
+    void setDelayTime(float v);
+    void setFeedback(float v);
+
     void setGlideTime(float v);
 
 signals:
@@ -297,6 +313,9 @@ signals:
     void filterLfoRateChanged();
     void filterLfoDepthChanged();
     void filterLfoShapeChanged();
+
+    void delayTimeChanged();
+    void feedbackChanged();
 
     void glideTimeChanged();
 
@@ -348,6 +367,9 @@ private:
     float m_filterLfoRate  = 0.5f;
     float m_filterLfoDepth = 0.0f;
     int m_filterLfoShape   = 4; // Triangle
+
+    float m_delayTime = 0.0f;
+    float m_feedback  = 0.0f;
 
     float m_glideTime = 0.0f;
 };

@@ -164,6 +164,35 @@ GroupBox {
 
         Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
 
+        // Feedback Delay
+        ColumnLayout {
+            spacing: 2
+            Label {
+                text: "Delay"
+                color: "#b0b0b0"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                Layout.alignment: Qt.AlignHCenter
+            }
+            RowLayout {
+                spacing: 8
+                RotarySlider {
+                    label: "Time"
+                    from: 0; to: 1; value: SynthBridge.delayTime
+                    stepSize: 0.001; decimals: 3
+                    onValueChanged: SynthBridge.delayTime = value
+                }
+                RotarySlider {
+                    label: "Fdbk"
+                    from: 0; to: 0.95; value: SynthBridge.feedback
+                    stepSize: 0.01; decimals: 2
+                    onValueChanged: SynthBridge.feedback = value
+                }
+            }
+        }
+
+        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
+
         // Glide
         ColumnLayout {
             spacing: 2
