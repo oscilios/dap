@@ -47,6 +47,7 @@ sub37::Synth::Synth(size_t bufferSize, float samplerate)
     subOsc().setPitchLfoPhase(0.0f);
 
     // --- Noise: off by default ---
+    setBusGain<3>(1.0f);
     noise().setGain(0.0f);
     noise().setColor(Graph::noise_gen_t::Color::White);
 
