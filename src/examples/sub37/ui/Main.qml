@@ -7,7 +7,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 620
+    height: 720
     title: "Sub 37 — Paraphonic Analog Synthesizer"
     color: "#181818"
 
@@ -80,10 +80,27 @@ ApplicationWindow {
                 }
             }
 
-            // Row 3: Arpeggiator
-            ArpPanel {
+            // Row 3: Arpeggiator + Sequencer
+            RowLayout {
                 Layout.fillWidth: true
+                spacing: 8
+
+                ArpPanel {
+                    Layout.fillHeight: true
+                }
+                SequencerPanel {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
             }
+        }
+
+        // Row 4: Step grid
+        StepGrid {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 32
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
         }
 
         // Piano keyboard

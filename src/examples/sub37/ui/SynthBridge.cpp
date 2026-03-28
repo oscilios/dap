@@ -11,7 +11,9 @@ SynthBridge::SynthBridge(QObject* parent)
 : QObject(parent)
 {
     connect(&m_arpTimer, &QTimer::timeout, this, &SynthBridge::arpStep);
+    connect(&m_seqTimer, &QTimer::timeout, this, &SynthBridge::seqStep);
     updateArpTimer();
+    updateSeqTimer();
 }
 
 void SynthBridge::setDeviceIndex(int idx)
@@ -110,6 +112,19 @@ void SynthBridge::noteOn(int midiNote)
     if (!m_synth)
         return;
 
+    // Assign to selected sequencer step if editing
+    if (m_seqSelectedStep >= 0)
+    {
+        m_sequencer.setNote(m_seqSelectedStep, midiNote);
+        emit seqNotesChanged();
+        m_seqSelectedStep = (m_seqSelectedStep + 1) % m_sequencer.stepCount();
+        emit seqSelectedStepChanged();
+    }
+
+    // If sequencer is playing, don't interfere with its playback
+    if (m_seqPlaying)
+        return;
+
     if (m_arpEnabled)
     {
         m_arpeggiator.noteOn(midiNote);
@@ -149,6 +164,9 @@ void SynthBridge::noteOff(int midiNote)
         return;
 
     if (m_hold)
+        return;
+
+    if (m_seqPlaying)
         return;
 
     if (m_arpEnabled)
@@ -539,4 +557,155 @@ void SynthBridge::setArpSubdivision(int v)
     m_arpSubdivision = v;
     updateArpTimer();
     emit arpSubdivisionChanged();
+}
+
+// --- Sequencer ---
+
+QVariantList SynthBridge::seqNotes() const
+{
+    QVariantList list;
+    for (int i = 0; i < sub37::Sequencer::MaxSteps; ++i)
+        list.append(m_sequencer.getNote(i));
+    return list;
+}
+
+void SynthBridge::seqSetNote(int step, int note)
+{
+    m_sequencer.setNote(step, note);
+    emit seqNotesChanged();
+}
+
+void SynthBridge::seqClearStep(int step)
+{
+    m_sequencer.clearStep(step);
+    emit seqNotesChanged();
+}
+
+void SynthBridge::seqClear()
+{
+    m_sequencer.clear();
+    emit seqNotesChanged();
+}
+
+void SynthBridge::updateSeqTimer()
+{
+    float stepMs = 60000.0f / m_seqBpm;
+    if (m_seqSubdivision > 1)
+        stepMs /= static_cast<float>(m_seqSubdivision);
+    m_seqTimer.setInterval(static_cast<int>(stepMs));
+}
+
+void SynthBridge::seqStep()
+{
+    if (!m_synth)
+        return;
+
+    int playingStep = m_sequencer.currentStep();
+    int note        = m_sequencer.step();
+
+    m_seqCurrentStep = playingStep;
+    emit seqCurrentStepChanged();
+
+    if (note >= 0)
+    {
+        float freq    = 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
+        m_fundamental = freq;
+        m_synth->setNote(freq);
+        updateOsc2Freq();
+
+        // Re-trigger envelope
+        m_synth->envelope().setGate(0.0f);
+        QTimer::singleShot(2,
+                           this,
+                           [this]()
+                           {
+                               if (m_synth && m_seqPlaying)
+                                   m_synth->envelope().setGate(1.0f);
+                           });
+
+        // Schedule gate off
+        float stepMs = 60000.0f / m_seqBpm;
+        if (m_seqSubdivision > 1)
+            stepMs /= static_cast<float>(m_seqSubdivision);
+        auto gateMs = static_cast<int>(stepMs * m_seqGate);
+
+        QTimer::singleShot(gateMs,
+                           this,
+                           [this, playingStep]()
+                           {
+                               if (m_synth && m_seqCurrentStep != playingStep)
+                                   m_synth->envelope().setGate(0.0f);
+                           });
+    }
+    else
+    {
+        // Rest — gate off
+        m_synth->envelope().setGate(0.0f);
+    }
+}
+
+void SynthBridge::setSeqPlaying(bool v)
+{
+    if (m_seqPlaying == v)
+        return;
+    m_seqPlaying = v;
+    if (v)
+    {
+        m_sequencer.reset();
+        m_seqCurrentStep = -1;
+        seqStep();
+        m_seqTimer.start();
+    }
+    else
+    {
+        m_seqTimer.stop();
+        m_seqCurrentStep = -1;
+        emit seqCurrentStepChanged();
+        if (m_synth)
+            m_synth->envelope().setGate(0.0f);
+    }
+    emit seqPlayingChanged();
+}
+
+void SynthBridge::setSeqBpm(float v)
+{
+    if (qFuzzyCompare(m_seqBpm, v))
+        return;
+    m_seqBpm = v;
+    updateSeqTimer();
+    emit seqBpmChanged();
+}
+
+void SynthBridge::setSeqStepCount(int v)
+{
+    if (m_sequencer.stepCount() == v)
+        return;
+    m_sequencer.setStepCount(v);
+    emit seqStepCountChanged();
+    emit seqNotesChanged();
+}
+
+void SynthBridge::setSeqGate(float v)
+{
+    if (qFuzzyCompare(m_seqGate, v))
+        return;
+    m_seqGate = v;
+    emit seqGateChanged();
+}
+
+void SynthBridge::setSeqSubdivision(int v)
+{
+    if (m_seqSubdivision == v)
+        return;
+    m_seqSubdivision = v;
+    updateSeqTimer();
+    emit seqSubdivisionChanged();
+}
+
+void SynthBridge::setSeqSelectedStep(int v)
+{
+    if (m_seqSelectedStep == v)
+        return;
+    m_seqSelectedStep = v;
+    emit seqSelectedStepChanged();
 }

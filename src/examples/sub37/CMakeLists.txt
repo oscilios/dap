@@ -21,6 +21,8 @@ if (Qt6_FOUND)
             ui/EnvelopePanel.qml
             ui/ModulationPanel.qml
             ui/ArpPanel.qml
+            ui/SequencerPanel.qml
+            ui/StepGrid.qml
             ui/PianoKeyboard.qml
             ui/RotarySlider.qml
             ui/SmallRadioButton.qml

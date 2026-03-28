@@ -1,7 +1,9 @@
 #pragma once
 #include "../Arpeggiator.h"
+#include "../Sequencer.h"
 #include <QObject>
 #include <QTimer>
+#include <QVariantList>
 #include <QtQmlIntegration>
 #include <memory>
 
@@ -98,6 +100,18 @@ class SynthBridge : public QObject
     Q_PROPERTY(
         int arpSubdivision READ arpSubdivision WRITE setArpSubdivision NOTIFY arpSubdivisionChanged)
     Q_PROPERTY(int arpCurrentNote READ arpCurrentNote NOTIFY arpCurrentNoteChanged)
+
+    // Sequencer
+    Q_PROPERTY(bool seqPlaying READ seqPlaying WRITE setSeqPlaying NOTIFY seqPlayingChanged)
+    Q_PROPERTY(float seqBpm READ seqBpm WRITE setSeqBpm NOTIFY seqBpmChanged)
+    Q_PROPERTY(int seqStepCount READ seqStepCount WRITE setSeqStepCount NOTIFY seqStepCountChanged)
+    Q_PROPERTY(float seqGate READ seqGate WRITE setSeqGate NOTIFY seqGateChanged)
+    Q_PROPERTY(
+        int seqSubdivision READ seqSubdivision WRITE setSeqSubdivision NOTIFY seqSubdivisionChanged)
+    Q_PROPERTY(int seqCurrentStep READ seqCurrentStep NOTIFY seqCurrentStepChanged)
+    Q_PROPERTY(int seqSelectedStep READ seqSelectedStep WRITE setSeqSelectedStep NOTIFY
+                   seqSelectedStepChanged)
+    Q_PROPERTY(QVariantList seqNotes READ seqNotes NOTIFY seqNotesChanged)
 
 public:
     explicit SynthBridge(QObject* parent = nullptr);
@@ -275,6 +289,40 @@ public:
         return m_arpCurrentNote;
     }
 
+    bool seqPlaying() const
+    {
+        return m_seqPlaying;
+    }
+    float seqBpm() const
+    {
+        return m_seqBpm;
+    }
+    int seqStepCount() const
+    {
+        return m_sequencer.stepCount();
+    }
+    float seqGate() const
+    {
+        return m_seqGate;
+    }
+    int seqSubdivision() const
+    {
+        return m_seqSubdivision;
+    }
+    int seqCurrentStep() const
+    {
+        return m_seqCurrentStep;
+    }
+    int seqSelectedStep() const
+    {
+        return m_seqSelectedStep;
+    }
+    QVariantList seqNotes() const;
+
+    Q_INVOKABLE void seqSetNote(int step, int note);
+    Q_INVOKABLE void seqClearStep(int step);
+    Q_INVOKABLE void seqClear();
+
     void setDeviceIndex(int idx);
 
     Q_INVOKABLE bool startAudio();
@@ -333,6 +381,13 @@ public slots:
     void setArpSubdivision(int v);
     void setHold(bool v);
 
+    void setSeqPlaying(bool v);
+    void setSeqBpm(float v);
+    void setSeqStepCount(int v);
+    void setSeqGate(float v);
+    void setSeqSubdivision(int v);
+    void setSeqSelectedStep(int v);
+
 signals:
     void osc1ShapeChanged();
     void osc1LevelChanged();
@@ -385,11 +440,22 @@ signals:
     void holdChanged();
     void arpCurrentNoteChanged();
 
+    void seqPlayingChanged();
+    void seqBpmChanged();
+    void seqStepCountChanged();
+    void seqGateChanged();
+    void seqSubdivisionChanged();
+    void seqCurrentStepChanged();
+    void seqSelectedStepChanged();
+    void seqNotesChanged();
+
 private:
     void initAudioDevice(int deviceIdx);
     void updateOsc2Freq();
     void arpStep();
     void updateArpTimer();
+    void seqStep();
+    void updateSeqTimer();
 
     std::unique_ptr<sub37::AudioProcess> m_process;
     sub37::Synth* m_synth = nullptr;
@@ -452,4 +518,14 @@ private:
     float m_arpGate      = 0.5f;
     int m_arpSubdivision = 2; // Eighth notes
     int m_arpCurrentNote = -1;
+
+    // Sequencer
+    sub37::Sequencer m_sequencer;
+    QTimer m_seqTimer;
+    bool m_seqPlaying     = false;
+    float m_seqBpm        = 120.0f;
+    float m_seqGate       = 0.5f;
+    int m_seqSubdivision  = 2; // Eighth notes
+    int m_seqCurrentStep  = -1;
+    int m_seqSelectedStep = -1;
 };
