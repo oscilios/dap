@@ -20,7 +20,8 @@ Item {
     readonly property real whiteKeyWidth: whiteKeyCount > 0
         ? (keysArea.width - (whiteKeyCount - 1)) / whiteKeyCount : 0
 
-    property int activeNote: -1
+    property var activeNotes: []
+    readonly property int arpNote: SynthBridge.arpCurrentNote
 
     implicitHeight: 120
 
@@ -29,6 +30,22 @@ Item {
         "t": 6, "g": 7, "y": 8, "h": 9, "u": 10, "j": 11,
         "k": 12, "o": 13, "l": 14, "p": 15, ";": 16
     })
+
+    function isNoteActive(note) {
+        return activeNotes.indexOf(note) !== -1 || arpNote === note;
+    }
+
+    function pressNote(note) {
+        var notes = activeNotes.slice();
+        if (notes.indexOf(note) === -1) notes.push(note);
+        activeNotes = notes;
+        SynthBridge.noteOn(note);
+    }
+
+    function releaseNote(note) {
+        activeNotes = activeNotes.filter(function(n) { return n !== note; });
+        SynthBridge.noteOff(note);
+    }
 
     focus: true
     Keys.onPressed: function(event) {
@@ -47,8 +64,7 @@ Item {
         if (offset !== undefined) {
             var note = startNote + offset;
             if (note <= 127) {
-                activeNote = note;
-                SynthBridge.noteOn(note);
+                pressNote(note);
             }
             event.accepted = true;
         }
@@ -58,10 +74,7 @@ Item {
         var offset = keyOffsets[event.text];
         if (offset !== undefined) {
             var note = startNote + offset;
-            if (activeNote === note) {
-                activeNote = -1;
-                SynthBridge.noteOff();
-            }
+            releaseNote(note);
             event.accepted = true;
         }
     }
@@ -142,9 +155,11 @@ Item {
 
                 Rectangle {
                     required property int modelData
+                    readonly property bool held: root.activeNotes.indexOf(modelData) !== -1
+                    readonly property bool arpPlaying: root.arpNote === modelData
                     width: root.whiteKeyWidth
                     height: keysArea.height
-                    color: root.activeNote === modelData ? "#4fc3f7" : "#eeeeee"
+                    color: arpPlaying ? "#4fc3f7" : held ? "#b3e5fc" : "#eeeeee"
                     border.color: "#999999"
                     border.width: 1
                     radius: 2
@@ -162,15 +177,11 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         onPressed: {
-                            root.activeNote = modelData;
-                            SynthBridge.noteOn(modelData);
+                            root.pressNote(modelData);
                             root.forceActiveFocus();
                         }
                         onReleased: {
-                            if (root.activeNote === modelData) {
-                                root.activeNote = -1;
-                                SynthBridge.noteOff();
-                            }
+                            root.releaseNote(modelData);
                         }
                     }
                 }
@@ -188,12 +199,14 @@ Item {
 
             Rectangle {
                 required property int modelData
+                readonly property bool held: root.activeNotes.indexOf(modelData) !== -1
+                readonly property bool arpPlaying: root.arpNote === modelData
                 readonly property int wkIdx: root.whiteKeyIndex(modelData)
                 x: wkIdx * (root.whiteKeyWidth + 1) + root.whiteKeyWidth * 0.65
                 y: 0
                 width: root.whiteKeyWidth * 0.7
                 height: keysArea.height * 0.6
-                color: root.activeNote === modelData ? "#0288d1" : "#333333"
+                color: arpPlaying ? "#0288d1" : held ? "#01579b" : "#333333"
                 border.color: "#111111"
                 border.width: 1
                 radius: 2
@@ -202,15 +215,11 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onPressed: {
-                        root.activeNote = modelData;
-                        SynthBridge.noteOn(modelData);
+                        root.pressNote(modelData);
                         root.forceActiveFocus();
                     }
                     onReleased: {
-                        if (root.activeNote === modelData) {
-                            root.activeNote = -1;
-                            SynthBridge.noteOff();
-                        }
+                        root.releaseNote(modelData);
                     }
                 }
             }

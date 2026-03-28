@@ -20,6 +20,7 @@ if (Qt6_FOUND)
             ui/FilterPanel.qml
             ui/EnvelopePanel.qml
             ui/ModulationPanel.qml
+            ui/ArpPanel.qml
             ui/PianoKeyboard.qml
             ui/RotarySlider.qml
             ui/SmallRadioButton.qml

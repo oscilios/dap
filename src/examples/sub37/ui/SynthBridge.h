@@ -1,5 +1,7 @@
 #pragma once
+#include "../Arpeggiator.h"
 #include <QObject>
+#include <QTimer>
 #include <QtQmlIntegration>
 #include <memory>
 
@@ -82,6 +84,20 @@ class SynthBridge : public QObject
 
     // Glide
     Q_PROPERTY(float glideTime READ glideTime WRITE setGlideTime NOTIFY glideTimeChanged)
+
+    // Hold
+    Q_PROPERTY(bool hold READ hold WRITE setHold NOTIFY holdChanged)
+
+    // Arpeggiator
+    Q_PROPERTY(bool arpEnabled READ arpEnabled WRITE setArpEnabled NOTIFY arpEnabledChanged)
+    Q_PROPERTY(float arpBpm READ arpBpm WRITE setArpBpm NOTIFY arpBpmChanged)
+    Q_PROPERTY(int arpPattern READ arpPattern WRITE setArpPattern NOTIFY arpPatternChanged)
+    Q_PROPERTY(
+        int arpOctaveRange READ arpOctaveRange WRITE setArpOctaveRange NOTIFY arpOctaveRangeChanged)
+    Q_PROPERTY(float arpGate READ arpGate WRITE setArpGate NOTIFY arpGateChanged)
+    Q_PROPERTY(
+        int arpSubdivision READ arpSubdivision WRITE setArpSubdivision NOTIFY arpSubdivisionChanged)
+    Q_PROPERTY(int arpCurrentNote READ arpCurrentNote NOTIFY arpCurrentNoteChanged)
 
 public:
     explicit SynthBridge(QObject* parent = nullptr);
@@ -226,12 +242,45 @@ public:
         return m_glideTime;
     }
 
+    bool arpEnabled() const
+    {
+        return m_arpEnabled;
+    }
+    float arpBpm() const
+    {
+        return m_arpBpm;
+    }
+    int arpPattern() const
+    {
+        return m_arpPattern;
+    }
+    int arpOctaveRange() const
+    {
+        return m_arpOctaveRange;
+    }
+    float arpGate() const
+    {
+        return m_arpGate;
+    }
+    int arpSubdivision() const
+    {
+        return m_arpSubdivision;
+    }
+    bool hold() const
+    {
+        return m_hold;
+    }
+    int arpCurrentNote() const
+    {
+        return m_arpCurrentNote;
+    }
+
     void setDeviceIndex(int idx);
 
     Q_INVOKABLE bool startAudio();
     Q_INVOKABLE bool stopAudio();
     Q_INVOKABLE void noteOn(int midiNote);
-    Q_INVOKABLE void noteOff();
+    Q_INVOKABLE void noteOff(int midiNote);
 
 public slots:
     void setOsc1Shape(int v);
@@ -276,6 +325,14 @@ public slots:
 
     void setGlideTime(float v);
 
+    void setArpEnabled(bool v);
+    void setArpBpm(float v);
+    void setArpPattern(int v);
+    void setArpOctaveRange(int v);
+    void setArpGate(float v);
+    void setArpSubdivision(int v);
+    void setHold(bool v);
+
 signals:
     void osc1ShapeChanged();
     void osc1LevelChanged();
@@ -319,9 +376,20 @@ signals:
 
     void glideTimeChanged();
 
+    void arpEnabledChanged();
+    void arpBpmChanged();
+    void arpPatternChanged();
+    void arpOctaveRangeChanged();
+    void arpGateChanged();
+    void arpSubdivisionChanged();
+    void holdChanged();
+    void arpCurrentNoteChanged();
+
 private:
     void initAudioDevice(int deviceIdx);
     void updateOsc2Freq();
+    void arpStep();
+    void updateArpTimer();
 
     std::unique_ptr<sub37::AudioProcess> m_process;
     sub37::Synth* m_synth = nullptr;
@@ -372,4 +440,16 @@ private:
     float m_feedback  = 0.0f;
 
     float m_glideTime = 0.0f;
+
+    // Arpeggiator
+    sub37::Arpeggiator m_arpeggiator;
+    QTimer m_arpTimer;
+    bool m_hold          = false;
+    bool m_arpEnabled    = false;
+    float m_arpBpm       = 120.0f;
+    int m_arpPattern     = 0; // Up
+    int m_arpOctaveRange = 1;
+    float m_arpGate      = 0.5f;
+    int m_arpSubdivision = 2; // Eighth notes
+    int m_arpCurrentNote = -1;
 };

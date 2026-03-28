@@ -10,6 +10,8 @@
 SynthBridge::SynthBridge(QObject* parent)
 : QObject(parent)
 {
+    connect(&m_arpTimer, &QTimer::timeout, this, &SynthBridge::arpStep);
+    updateArpTimer();
 }
 
 void SynthBridge::setDeviceIndex(int idx)
@@ -107,6 +109,18 @@ void SynthBridge::noteOn(int midiNote)
 {
     if (!m_synth)
         return;
+
+    if (m_arpEnabled)
+    {
+        m_arpeggiator.noteOn(midiNote);
+        if (!m_arpTimer.isActive() && m_arpeggiator.hasNotes())
+        {
+            arpStep();
+            m_arpTimer.start();
+        }
+        return;
+    }
+
     m_fundamental = 440.0f * std::pow(2.0f, (midiNote - 69) / 12.0f);
     m_synth->setNote(m_fundamental);
     updateOsc2Freq();
@@ -129,10 +143,27 @@ void SynthBridge::noteOn(int midiNote)
     m_noteActive = true;
 }
 
-void SynthBridge::noteOff()
+void SynthBridge::noteOff(int midiNote)
 {
     if (!m_synth)
         return;
+
+    if (m_hold)
+        return;
+
+    if (m_arpEnabled)
+    {
+        m_arpeggiator.noteOff(midiNote);
+        if (!m_arpeggiator.hasNotes())
+        {
+            m_arpTimer.stop();
+            m_synth->envelope().setGate(0.0f);
+            m_arpCurrentNote = -1;
+            emit arpCurrentNoteChanged();
+        }
+        return;
+    }
+
     m_noteActive = false;
     m_synth->envelope().setGate(0.0f);
 }
@@ -365,4 +396,147 @@ void SynthBridge::setGlideTime(float v)
         m_synth->setGlide(samples);
     }
     emit glideTimeChanged();
+}
+
+// --- Arpeggiator ---
+
+void SynthBridge::updateArpTimer()
+{
+    float stepMs = 60000.0f / m_arpBpm;
+    if (m_arpSubdivision > 1)
+        stepMs /= static_cast<float>(m_arpSubdivision);
+    m_arpTimer.setInterval(static_cast<int>(stepMs));
+}
+
+void SynthBridge::arpStep()
+{
+    if (!m_synth)
+        return;
+
+    int note = m_arpeggiator.step();
+    if (note < 0)
+    {
+        m_synth->envelope().setGate(0.0f);
+        m_arpTimer.stop();
+        m_arpCurrentNote = -1;
+        emit arpCurrentNoteChanged();
+        return;
+    }
+
+    m_arpCurrentNote = note;
+    emit arpCurrentNoteChanged();
+
+    float freq    = 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
+    m_fundamental = freq;
+    m_synth->setNote(freq);
+    updateOsc2Freq();
+
+    // Re-trigger envelope
+    m_synth->envelope().setGate(0.0f);
+    QTimer::singleShot(2,
+                       this,
+                       [this]()
+                       {
+                           if (m_synth && m_arpeggiator.hasNotes())
+                               m_synth->envelope().setGate(1.0f);
+                       });
+
+    // Schedule gate off based on gate length
+    float stepMs = 60000.0f / m_arpBpm;
+    if (m_arpSubdivision > 1)
+        stepMs /= static_cast<float>(m_arpSubdivision);
+    auto gateMs = static_cast<int>(stepMs * m_arpGate);
+
+    QTimer::singleShot(gateMs,
+                       this,
+                       [this, note]()
+                       {
+                           if (m_synth && m_arpCurrentNote == note)
+                               m_synth->envelope().setGate(0.0f);
+                       });
+}
+
+void SynthBridge::setArpEnabled(bool v)
+{
+    if (m_arpEnabled == v)
+        return;
+    m_arpEnabled = v;
+    if (!v)
+    {
+        m_arpTimer.stop();
+        m_arpeggiator.clear();
+        m_arpCurrentNote = -1;
+        emit arpCurrentNoteChanged();
+        if (m_synth)
+            m_synth->envelope().setGate(0.0f);
+    }
+    emit arpEnabledChanged();
+}
+
+void SynthBridge::setHold(bool v)
+{
+    if (m_hold == v)
+        return;
+    m_hold = v;
+    if (!v && m_synth)
+    {
+        if (m_arpEnabled && !m_arpeggiator.hasNotes())
+        {
+            m_arpTimer.stop();
+            m_synth->envelope().setGate(0.0f);
+            m_arpCurrentNote = -1;
+            emit arpCurrentNoteChanged();
+        }
+        else if (!m_arpEnabled)
+        {
+            // Release sustained note when hold is turned off
+            m_noteActive = false;
+            m_synth->envelope().setGate(0.0f);
+        }
+    }
+    emit holdChanged();
+}
+
+void SynthBridge::setArpBpm(float v)
+{
+    if (qFuzzyCompare(m_arpBpm, v))
+        return;
+    m_arpBpm = v;
+    updateArpTimer();
+    emit arpBpmChanged();
+}
+
+void SynthBridge::setArpPattern(int v)
+{
+    if (m_arpPattern == v)
+        return;
+    m_arpPattern = v;
+    m_arpeggiator.setPattern(static_cast<sub37::Arpeggiator::Pattern>(v));
+    emit arpPatternChanged();
+}
+
+void SynthBridge::setArpOctaveRange(int v)
+{
+    if (m_arpOctaveRange == v)
+        return;
+    m_arpOctaveRange = v;
+    m_arpeggiator.setOctaveRange(v);
+    emit arpOctaveRangeChanged();
+}
+
+void SynthBridge::setArpGate(float v)
+{
+    if (qFuzzyCompare(m_arpGate, v))
+        return;
+    m_arpGate = v;
+    emit arpGateChanged();
+}
+
+void SynthBridge::setArpSubdivision(int v)
+{
+    if (m_arpSubdivision == v)
+        return;
+    m_arpSubdivision = v;
+    updateArpTimer();
+    emit arpSubdivisionChanged();
 }

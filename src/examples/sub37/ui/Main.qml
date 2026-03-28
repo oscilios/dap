@@ -7,7 +7,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 520
+    height: 620
     title: "Sub 37 — Paraphonic Analog Synthesizer"
     color: "#181818"
 
@@ -78,6 +78,11 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
+            }
+
+            // Row 3: Arpeggiator
+            ArpPanel {
+                Layout.fillWidth: true
             }
         }
 
