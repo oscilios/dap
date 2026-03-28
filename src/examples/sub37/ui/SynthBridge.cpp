@@ -50,6 +50,15 @@ void SynthBridge::initAudioDevice(int deviceIdx)
     m_synth->setOsc2BeatFreq(m_osc2BeatFreq);
     m_synth->setBusGain<2>(m_subLevel);
 
+    m_synth->pwm().setBusLevel(m_pwmLevel);
+    m_synth->pwm().setDutyCycle(m_pwmDutyCycle);
+    m_synth->pwm().setDcLfoRate(m_pwmDcLfoRate);
+    m_synth->pwm().setDcLfoDepth(m_pwmDcLfoDepth);
+    {
+        using Shape = dap::dsp::OscillatorFunctions::Shape;
+        m_synth->pwm().setDcLfoShape(static_cast<Shape>(m_pwmDcLfoShape));
+    }
+
     m_synth->noise().setGain(m_noiseGain);
     {
         using Color = dap::dsp::NoiseGenerator<dap::dsp::UniformDistribution>::Color;
@@ -203,6 +212,11 @@ IMPL_FLOAT_SETTER(Osc1Level, m_osc1Level, osc1().setBusLevel(v), osc1LevelChange
 IMPL_FLOAT_SETTER(Osc2Level, m_osc2Level, osc2().setBusLevel(v), osc2LevelChanged)
 IMPL_FLOAT_SETTER(SubLevel, m_subLevel, setBusGain<2>(v), subLevelChanged)
 
+IMPL_FLOAT_SETTER(PwmLevel, m_pwmLevel, pwm().setBusLevel(v), pwmLevelChanged)
+IMPL_FLOAT_SETTER(PwmDutyCycle, m_pwmDutyCycle, pwm().setDutyCycle(v), pwmDutyCycleChanged)
+IMPL_FLOAT_SETTER(PwmDcLfoRate, m_pwmDcLfoRate, pwm().setDcLfoRate(v), pwmDcLfoRateChanged)
+IMPL_FLOAT_SETTER(PwmDcLfoDepth, m_pwmDcLfoDepth, pwm().setDcLfoDepth(v), pwmDcLfoDepthChanged)
+
 IMPL_FLOAT_SETTER(NoiseGain, m_noiseGain, noise().setGain(v), noiseGainChanged)
 
 IMPL_FLOAT_SETTER(AmpAttack, m_ampAttack, envelope().setAttack(v), ampAttackChanged)
@@ -235,6 +249,19 @@ IMPL_FLOAT_SETTER(FilterLfoRate, m_filterLfoRate, filter().setLfoRate(v), filter
 IMPL_FLOAT_SETTER(FilterLfoDepth, m_filterLfoDepth, filter().setLfoDepth(v), filterLfoDepthChanged)
 
 #undef IMPL_FLOAT_SETTER
+
+void SynthBridge::setPwmDcLfoShape(int v)
+{
+    if (m_pwmDcLfoShape == v)
+        return;
+    m_pwmDcLfoShape = v;
+    if (m_synth)
+    {
+        using Shape = dap::dsp::OscillatorFunctions::Shape;
+        m_synth->pwm().setDcLfoShape(static_cast<Shape>(v));
+    }
+    emit pwmDcLfoShapeChanged();
+}
 
 // Pitch LFO setters — must update all oscillator copies
 void SynthBridge::setPitchLfoRate(float v)

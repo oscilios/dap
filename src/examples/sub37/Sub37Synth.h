@@ -1,12 +1,13 @@
 #pragma once
 #include "base/KeyValueTuple.h"
 #include "crtp/nodes/Processor.h"
-#include "dsp/EnvelopeGenerator.h"
 #include "dsp/CombFilter.h"
+#include "dsp/EnvelopeGenerator.h"
 #include "dsp/LadderFilter.h"
 #include "dsp/Mixer.h"
 #include "dsp/NoiseGenerator.h"
 #include "dsp/Oscillator.h"
+#include "dsp/Pwm.h"
 #include "dsp/Smoother.h"
 #include "dsp/UniformDistribution.h"
 #include "fastmath/AudioBuffer.h"
@@ -73,7 +74,19 @@ class sub37::Synth final
                 "gain"_s,
                 "color"_s));
 
-        // Mixer: 4 buses (osc1, osc2, sub, noise)
+        // PWM duty cycle: base + LFO
+        using pwm_dutycycle_t = decltype(control_t{} + lfo_t{});
+
+        // PWM oscillator: gain, freq (with glide+LFO), phase, samplerate, dutyCycle(base+LFO)
+        using pwm_t =
+            decltype(processor<dap::dsp::Pwm<scalar_t>>::with_inputs<control_t,
+                                                                     osc_freq_t,
+                                                                     control_t,
+                                                                     samplerate_t,
+                                                                     pwm_dutycycle_t>::
+                         named("gain"_s, "frequency"_s, "phase"_s, "samplerate"_s, "dutycycle"_s));
+
+        // Mixer: 5 buses (osc1, osc2, sub, noise, pwm)
         template <typename T>
         using bus_t =
             decltype(processor<dap::dsp::Mixer::Bus>::with_inputs<control_t, T>::named("gain"_s,
@@ -83,7 +96,7 @@ class sub37::Synth final
         using mixer_t =
             decltype(processor<dap::dsp::Mixer>::with_inputs<bus_t<Ts>...>::prefixed_by("bus_"_s));
 
-        using osc_mixer_t = mixer_t<osc_t, osc_t, osc_t, noise_t>;
+        using osc_mixer_t = mixer_t<osc_t, osc_t, osc_t, noise_t, pwm_t>;
 
         // Amp output: ampEnvelope * mixer
         using osc_output_t = decltype(envelope_t{} * osc_mixer_t{});
@@ -336,6 +349,93 @@ public:
         }
     };
 
+    // --- PWM accessor ---
+    class PwmControl
+    {
+        Graph::pwm_t& m_pwm;
+        Graph::control_t& m_busGain;
+
+    public:
+        PwmControl(Graph::pwm_t& pwm, Graph::control_t& busGain)
+        : m_pwm(pwm)
+        , m_busGain(busGain)
+        {
+        }
+
+        void setFreq(float hz)
+        {
+            m_pwm.input("frequency"_s).input("x"_s).input("value"_s) = hz;
+        }
+        void setGlideDuration(size_t samples)
+        {
+            m_pwm.input("frequency"_s).input("x"_s).input("duration"_s) = samples;
+        }
+        void setGain(float g)
+        {
+            m_pwm.input("gain"_s).input("value"_s) = g;
+        }
+        void setBusLevel(float g)
+        {
+            m_busGain.input("value"_s) = g;
+        }
+        void setSampleRate(float sr)
+        {
+            m_pwm.input("samplerate"_s) = sr;
+        }
+        void setPhase(float p)
+        {
+            m_pwm.input("phase"_s).input("value"_s) = p;
+        }
+        void setDutyCycle(float dc)
+        {
+            m_pwm.input("dutycycle"_s).input("x"_s).input("value"_s) = dc;
+        }
+
+        // Duty cycle LFO
+        void setDcLfoRate(float hz)
+        {
+            m_pwm.input("dutycycle"_s).input("y"_s).input("frequency"_s).input("value"_s) = hz;
+        }
+        void setDcLfoDepth(float d)
+        {
+            m_pwm.input("dutycycle"_s).input("y"_s).input("gain"_s).input("value"_s) = d;
+        }
+        void setDcLfoShape(Graph::shape s)
+        {
+            m_pwm.input("dutycycle"_s).input("y"_s).input("shape"_s) = s;
+        }
+        void setDcLfoSampleRate(float sr)
+        {
+            m_pwm.input("dutycycle"_s).input("y"_s).input("samplerate"_s) = sr;
+        }
+        void setDcLfoPhase(float p)
+        {
+            m_pwm.input("dutycycle"_s).input("y"_s).input("phase"_s).input("value"_s) = p;
+        }
+
+        // Pitch LFO
+        void setPitchLfoRate(float hz)
+        {
+            m_pwm.input("frequency"_s).input("y"_s).input("frequency"_s).input("value"_s) = hz;
+        }
+        void setPitchLfoDepth(float d)
+        {
+            m_pwm.input("frequency"_s).input("y"_s).input("gain"_s).input("value"_s) = d;
+        }
+        void setPitchLfoShape(Graph::shape s)
+        {
+            m_pwm.input("frequency"_s).input("y"_s).input("shape"_s) = s;
+        }
+        void setPitchLfoSampleRate(float sr)
+        {
+            m_pwm.input("frequency"_s).input("y"_s).input("samplerate"_s) = sr;
+        }
+        void setPitchLfoPhase(float p)
+        {
+            m_pwm.input("frequency"_s).input("y"_s).input("phase"_s).input("value"_s) = p;
+        }
+    };
+
     Synth(size_t bufferSize, float samplerate);
 
     // Oscillator accessors (bus 0=osc1, 1=osc2, 2=sub)
@@ -402,6 +502,13 @@ public:
             filterNode().input("signal"_s).input("y"_s).template input<3>().input("signal"_s)};
     }
 
+    auto pwm()
+    {
+        auto& mixer = filterNode().input("signal"_s).input("y"_s);
+        return PwmControl{mixer.template input<4>().input("signal"_s),
+                          mixer.template input<4>().input("gain"_s)};
+    }
+
     // Feedback delay line controls
     void setDelayTime(float samples)
     {
@@ -428,6 +535,7 @@ public:
         osc1().setFreq(freq);
         osc2().setFreq(freq + m_osc2BeatFreq);
         subOsc().setFreq(freq * 0.5f);
+        pwm().setFreq(freq);
     }
 
     // Set glide duration on all oscillators
@@ -436,9 +544,10 @@ public:
         osc1().setGlideDuration(samples);
         osc2().setGlideDuration(samples);
         subOsc().setGlideDuration(samples);
+        pwm().setGlideDuration(samples);
     }
 
-    // Set pitch LFO 1 params on osc1 and sub
+    // Set pitch LFO 1 params on osc1, sub, pwm1, pwm2
     void setPitchLfo(float rate, float depth, Graph::shape shape = Graph::shape::Triangle)
     {
         auto setLfo = [&](auto osc)
@@ -449,6 +558,7 @@ public:
         };
         setLfo(osc1());
         setLfo(subOsc());
+        setLfo(pwm());
     }
 
     // Set pitch LFO 2 params on osc2 only

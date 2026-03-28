@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import Sub37
 
 ApplicationWindow {
     id: window
     visible: true
-    width: 1280
-    height: 720
+    width: 1440
+    height: 758
     title: "Sub 37 — Paraphonic Analog Synthesizer"
     color: "#181818"
 

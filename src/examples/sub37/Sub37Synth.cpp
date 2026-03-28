@@ -46,6 +46,25 @@ sub37::Synth::Synth(size_t bufferSize, float samplerate)
     subOsc().setPitchLfoSampleRate(samplerate);
     subOsc().setPitchLfoPhase(0.0f);
 
+    // --- PWM: off by default ---
+    pwm().setGain(1.0f);
+    pwm().setBusLevel(0.0f);
+    pwm().setFreq(110.0f);
+    pwm().setGlideDuration(0);
+    pwm().setSampleRate(samplerate);
+    pwm().setPhase(0.0f);
+    pwm().setDutyCycle(0.5f);
+    pwm().setDcLfoRate(1.0f);
+    pwm().setDcLfoDepth(0.0f);
+    pwm().setDcLfoShape(Graph::shape::Triangle);
+    pwm().setDcLfoSampleRate(samplerate);
+    pwm().setDcLfoPhase(0.0f);
+    pwm().setPitchLfoRate(5.0f);
+    pwm().setPitchLfoDepth(0.0f);
+    pwm().setPitchLfoShape(Graph::shape::Triangle);
+    pwm().setPitchLfoSampleRate(samplerate);
+    pwm().setPitchLfoPhase(0.0f);
+
     // --- Noise: off by default ---
     setBusGain<3>(1.0f);
     noise().setGain(0.0f);

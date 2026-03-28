@@ -29,6 +29,17 @@ class SynthBridge : public QObject
     Q_PROPERTY(int osc2Octave READ osc2Octave WRITE setOsc2Octave NOTIFY osc2OctaveChanged)
     Q_PROPERTY(float subLevel READ subLevel WRITE setSubLevel NOTIFY subLevelChanged)
 
+    // PWM
+    Q_PROPERTY(float pwmLevel READ pwmLevel WRITE setPwmLevel NOTIFY pwmLevelChanged)
+    Q_PROPERTY(
+        float pwmDutyCycle READ pwmDutyCycle WRITE setPwmDutyCycle NOTIFY pwmDutyCycleChanged)
+    Q_PROPERTY(
+        float pwmDcLfoRate READ pwmDcLfoRate WRITE setPwmDcLfoRate NOTIFY pwmDcLfoRateChanged)
+    Q_PROPERTY(
+        float pwmDcLfoDepth READ pwmDcLfoDepth WRITE setPwmDcLfoDepth NOTIFY pwmDcLfoDepthChanged)
+    Q_PROPERTY(
+        int pwmDcLfoShape READ pwmDcLfoShape WRITE setPwmDcLfoShape NOTIFY pwmDcLfoShapeChanged)
+
     // Noise
     Q_PROPERTY(float noiseGain READ noiseGain WRITE setNoiseGain NOTIFY noiseGainChanged)
     Q_PROPERTY(int noiseColor READ noiseColor WRITE setNoiseColor NOTIFY noiseColorChanged)
@@ -145,6 +156,27 @@ public:
     float subLevel() const
     {
         return m_subLevel;
+    }
+
+    float pwmLevel() const
+    {
+        return m_pwmLevel;
+    }
+    float pwmDutyCycle() const
+    {
+        return m_pwmDutyCycle;
+    }
+    float pwmDcLfoRate() const
+    {
+        return m_pwmDcLfoRate;
+    }
+    float pwmDcLfoDepth() const
+    {
+        return m_pwmDcLfoDepth;
+    }
+    int pwmDcLfoShape() const
+    {
+        return m_pwmDcLfoShape;
     }
 
     float noiseGain() const
@@ -339,6 +371,12 @@ public slots:
     void setOsc2Octave(int v);
     void setSubLevel(float v);
 
+    void setPwmLevel(float v);
+    void setPwmDutyCycle(float v);
+    void setPwmDcLfoRate(float v);
+    void setPwmDcLfoDepth(float v);
+    void setPwmDcLfoShape(int v);
+
     void setNoiseGain(float v);
     void setNoiseColor(int v);
 
@@ -396,6 +434,12 @@ signals:
     void osc2BeatFreqChanged();
     void osc2OctaveChanged();
     void subLevelChanged();
+
+    void pwmLevelChanged();
+    void pwmDutyCycleChanged();
+    void pwmDcLfoRateChanged();
+    void pwmDcLfoDepthChanged();
+    void pwmDcLfoShapeChanged();
 
     void noiseGainChanged();
     void noiseColorChanged();
@@ -472,6 +516,12 @@ private:
     float m_osc2BeatFreq = 2.0f;
     int m_osc2Octave     = 0;
     float m_subLevel     = 0.6f;
+
+    float m_pwmLevel      = 0.0f;
+    float m_pwmDutyCycle  = 0.5f;
+    float m_pwmDcLfoRate  = 1.0f;
+    float m_pwmDcLfoDepth = 0.0f;
+    int m_pwmDcLfoShape   = 4; // Triangle
 
     float m_noiseGain = 0.0f;
     int m_noiseColor  = 0; // White

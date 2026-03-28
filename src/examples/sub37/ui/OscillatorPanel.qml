@@ -177,6 +177,33 @@ RowLayout {
                     }
                 }
             }
+            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
+
+            // PWM
+            ColumnLayout {
+                spacing: 2
+                Label {
+                    text: "PWM"
+                    color: "#b0b0b0"
+                    font.pixelSize: 10
+                    font.weight: Font.Medium
+                    Layout.alignment: Qt.AlignHCenter
+                }
+                RowLayout {
+                    spacing: 8
+                    RotarySlider {
+                        label: "Level"
+                        from: 0; to: 1; value: SynthBridge.pwmLevel
+                        onValueChanged: SynthBridge.pwmLevel = value
+                    }
+                    RotarySlider {
+                        label: "Duty"
+                        from: 0.01; to: 0.99; value: SynthBridge.pwmDutyCycle
+                        stepSize: 0.01; decimals: 2
+                        onValueChanged: SynthBridge.pwmDutyCycle = value
+                    }
+                }
+            }
         }
     }
 

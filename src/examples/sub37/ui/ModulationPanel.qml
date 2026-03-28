@@ -164,6 +164,52 @@ GroupBox {
 
         Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
 
+        // PWM LFO
+        ColumnLayout {
+            spacing: 2
+            Label {
+                text: "PWM LFO"
+                color: "#b0b0b0"
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                Layout.alignment: Qt.AlignHCenter
+            }
+            RowLayout {
+                spacing: 8
+                RotarySlider {
+                    label: "Rate"
+                    from: 0.1; to: 20; value: SynthBridge.pwmDcLfoRate
+                    stepSize: 0.1; decimals: 1
+                    onValueChanged: SynthBridge.pwmDcLfoRate = value
+                }
+                RotarySlider {
+                    label: "Depth"
+                    from: 0; to: 0.5; value: SynthBridge.pwmDcLfoDepth
+                    stepSize: 0.01; decimals: 2
+                    onValueChanged: SynthBridge.pwmDcLfoDepth = value
+                }
+                ColumnLayout {
+                    spacing: 1
+                    Repeater {
+                        model: ["Sine", "Square", "Saw", "InvSaw", "Tri"]
+                        SmallRadioButton {
+                            checked: SynthBridge.pwmDcLfoShape === index
+                            onClicked: SynthBridge.pwmDcLfoShape = index
+                            contentItem: Label {
+                                text: modelData
+                                color: parent.checked ? "#e0e0e0" : "#777777"
+                                font.pixelSize: 10
+                                leftPadding: parent.indicator.width + 2
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#333333" }
+
         // Feedback Delay
         ColumnLayout {
             spacing: 2
