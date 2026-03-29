@@ -67,6 +67,18 @@ class SynthBridge : public QObject
     Q_PROPERTY(
         float filterRelease READ filterRelease WRITE setFilterRelease NOTIFY filterReleaseChanged)
 
+    // Pitch Envelope
+    Q_PROPERTY(float pitchEnvAttack READ pitchEnvAttack WRITE setPitchEnvAttack NOTIFY
+                   pitchEnvAttackChanged)
+    Q_PROPERTY(
+        float pitchEnvDecay READ pitchEnvDecay WRITE setPitchEnvDecay NOTIFY pitchEnvDecayChanged)
+    Q_PROPERTY(float pitchEnvSustain READ pitchEnvSustain WRITE setPitchEnvSustain NOTIFY
+                   pitchEnvSustainChanged)
+    Q_PROPERTY(float pitchEnvRelease READ pitchEnvRelease WRITE setPitchEnvRelease NOTIFY
+                   pitchEnvReleaseChanged)
+    Q_PROPERTY(float pitchEnvAmount READ pitchEnvAmount WRITE setPitchEnvAmount NOTIFY
+                   pitchEnvAmountChanged)
+
     // Mod 1 (Pitch LFO)
     Q_PROPERTY(
         float pitchLfoRate READ pitchLfoRate WRITE setPitchLfoRate NOTIFY pitchLfoRateChanged)
@@ -235,6 +247,27 @@ public:
         return m_filterRelease;
     }
 
+    float pitchEnvAttack() const
+    {
+        return m_pitchEnvAttack;
+    }
+    float pitchEnvDecay() const
+    {
+        return m_pitchEnvDecay;
+    }
+    float pitchEnvSustain() const
+    {
+        return m_pitchEnvSustain;
+    }
+    float pitchEnvRelease() const
+    {
+        return m_pitchEnvRelease;
+    }
+    float pitchEnvAmount() const
+    {
+        return m_pitchEnvAmount;
+    }
+
     float pitchLfoRate() const
     {
         return m_pitchLfoRate;
@@ -394,6 +427,12 @@ public slots:
     void setFilterSustain(float v);
     void setFilterRelease(float v);
 
+    void setPitchEnvAttack(float v);
+    void setPitchEnvDecay(float v);
+    void setPitchEnvSustain(float v);
+    void setPitchEnvRelease(float v);
+    void setPitchEnvAmount(float v);
+
     void setPitchLfoRate(float v);
     void setPitchLfoDepth(float v);
     void setPitchLfoShape(int v);
@@ -457,6 +496,12 @@ signals:
     void filterDecayChanged();
     void filterSustainChanged();
     void filterReleaseChanged();
+
+    void pitchEnvAttackChanged();
+    void pitchEnvDecayChanged();
+    void pitchEnvSustainChanged();
+    void pitchEnvReleaseChanged();
+    void pitchEnvAmountChanged();
 
     void pitchLfoRateChanged();
     void pitchLfoDepthChanged();
@@ -539,6 +584,12 @@ private:
     float m_filterDecay   = 0.4f;
     float m_filterSustain = 0.0f;
     float m_filterRelease = 0.2f;
+
+    float m_pitchEnvAttack  = 0.01f;
+    float m_pitchEnvDecay   = 0.3f;
+    float m_pitchEnvSustain = 0.0f;
+    float m_pitchEnvRelease = 0.1f;
+    float m_pitchEnvAmount  = 0.0f;
 
     float m_pitchLfoRate  = 5.0f;
     float m_pitchLfoDepth = 0.0f;

@@ -79,6 +79,12 @@ void SynthBridge::initAudioDevice(int deviceIdx)
     m_synth->filterEnvelope().setSustain(m_filterSustain);
     m_synth->filterEnvelope().setRelease(m_filterRelease);
 
+    m_synth->pitchEnvelope().setAttack(m_pitchEnvAttack);
+    m_synth->pitchEnvelope().setDecay(m_pitchEnvDecay);
+    m_synth->pitchEnvelope().setSustain(m_pitchEnvSustain);
+    m_synth->pitchEnvelope().setRelease(m_pitchEnvRelease);
+    m_synth->pitchEnvelope().setAmount(m_pitchEnvAmount);
+
     m_synth->setPitchLfo(m_pitchLfoRate, m_pitchLfoDepth, static_cast<Shape>(m_pitchLfoShape));
     m_synth->setPitchLfo2(m_pitchLfo2Rate, m_pitchLfo2Depth, static_cast<Shape>(m_pitchLfo2Shape));
     m_synth->filter().setLfoRate(m_filterLfoRate);
@@ -244,6 +250,24 @@ IMPL_FLOAT_SETTER(FilterRelease,
                   m_filterRelease,
                   filterEnvelope().setRelease(v),
                   filterReleaseChanged)
+
+IMPL_FLOAT_SETTER(PitchEnvAttack,
+                  m_pitchEnvAttack,
+                  pitchEnvelope().setAttack(v),
+                  pitchEnvAttackChanged)
+IMPL_FLOAT_SETTER(PitchEnvDecay, m_pitchEnvDecay, pitchEnvelope().setDecay(v), pitchEnvDecayChanged)
+IMPL_FLOAT_SETTER(PitchEnvSustain,
+                  m_pitchEnvSustain,
+                  pitchEnvelope().setSustain(v),
+                  pitchEnvSustainChanged)
+IMPL_FLOAT_SETTER(PitchEnvRelease,
+                  m_pitchEnvRelease,
+                  pitchEnvelope().setRelease(v),
+                  pitchEnvReleaseChanged)
+IMPL_FLOAT_SETTER(PitchEnvAmount,
+                  m_pitchEnvAmount,
+                  pitchEnvelope().setAmount(v),
+                  pitchEnvAmountChanged)
 
 IMPL_FLOAT_SETTER(FilterLfoRate, m_filterLfoRate, filter().setLfoRate(v), filterLfoRateChanged)
 IMPL_FLOAT_SETTER(FilterLfoDepth, m_filterLfoDepth, filter().setLfoDepth(v), filterLfoDepthChanged)

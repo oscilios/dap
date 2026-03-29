@@ -20,6 +20,7 @@ if (Qt6_FOUND)
             ui/FilterPanel.qml
             ui/EnvelopePanel.qml
             ui/ModulationPanel.qml
+            ui/PitchEnvPanel.qml
             ui/ArpPanel.qml
             ui/SequencerPanel.qml
             ui/StepGrid.qml

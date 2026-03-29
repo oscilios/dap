@@ -61,8 +61,11 @@ class sub37::Synth final
 
         using lfo_t = osc_tmpl_t<control_t, control_t, control_t>;
 
-        // Oscillator pitch: glide(note) + LFO(depth * waveform(rate))
-        using osc_freq_t = decltype(glide_t{} + lfo_t{});
+        // Pitch envelope: env * amount (in Hz)
+        using pitch_env_t = decltype(envelope_t{} * control_t{});
+
+        // Oscillator pitch: glide(note) + LFO + pitchEnv * amount
+        using osc_freq_t = decltype(glide_t{} + lfo_t{} + pitch_env_t{});
 
         // Main oscillator type (used for osc1, osc2, sub)
         using osc_t = osc_tmpl_t<control_t, osc_freq_t, control_t>;
@@ -148,11 +151,11 @@ public:
 
         void setFreq(float hz)
         {
-            m_osc.input("frequency"_s).input("x"_s).input("value"_s) = hz;
+            m_osc.input("frequency"_s).input("x"_s).input("x"_s).input("value"_s) = hz;
         }
         void setGlideDuration(size_t samples)
         {
-            m_osc.input("frequency"_s).input("x"_s).input("duration"_s) = samples;
+            m_osc.input("frequency"_s).input("x"_s).input("x"_s).input("duration"_s) = samples;
         }
         void setGain(float g)
         {
@@ -178,36 +181,49 @@ public:
         // Pitch LFO (mod 1) — each oscillator has its own tree copy
         void setPitchLfoRate(float hz)
         {
-            m_osc.input("frequency"_s).input("y"_s).input("frequency"_s).input("value"_s) = hz;
+            m_osc.input("frequency"_s)
+                .input("x"_s)
+                .input("y"_s)
+                .input("frequency"_s)
+                .input("value"_s) = hz;
         }
         void setPitchLfoDepth(float d)
         {
-            m_osc.input("frequency"_s).input("y"_s).input("gain"_s).input("value"_s) = d;
+            m_osc.input("frequency"_s).input("x"_s).input("y"_s).input("gain"_s).input("value"_s) =
+                d;
         }
         void setPitchLfoShape(Graph::shape s)
         {
-            m_osc.input("frequency"_s).input("y"_s).input("shape"_s) = s;
+            m_osc.input("frequency"_s).input("x"_s).input("y"_s).input("shape"_s) = s;
         }
         void setPitchLfoSampleRate(float sr)
         {
-            m_osc.input("frequency"_s).input("y"_s).input("samplerate"_s) = sr;
+            m_osc.input("frequency"_s).input("x"_s).input("y"_s).input("samplerate"_s) = sr;
         }
         void setPitchLfoPhase(float p)
         {
-            m_osc.input("frequency"_s).input("y"_s).input("phase"_s).input("value"_s) = p;
+            m_osc.input("frequency"_s).input("x"_s).input("y"_s).input("phase"_s).input("value"_s) =
+                p;
         }
     };
 
-    // --- Amp envelope (also triggers filter envelope) ---
+    // --- Amp envelope (also triggers filter + pitch envelopes) ---
     class AmpEnvelope
     {
         Graph::envelope_t& m_ampEnv;
         Graph::envelope_t& m_filterEnv;
+        Graph::envelope_t& m_pitchEnv1;
+        Graph::envelope_t& m_pitchEnv2;
 
     public:
-        AmpEnvelope(Graph::envelope_t& ampEnv, Graph::envelope_t& filterEnv)
+        AmpEnvelope(Graph::envelope_t& ampEnv,
+                    Graph::envelope_t& filterEnv,
+                    Graph::envelope_t& pitchEnv1,
+                    Graph::envelope_t& pitchEnv2)
         : m_ampEnv(ampEnv)
         , m_filterEnv(filterEnv)
+        , m_pitchEnv1(pitchEnv1)
+        , m_pitchEnv2(pitchEnv2)
         {
         }
 
@@ -215,6 +231,8 @@ public:
         {
             m_ampEnv.input("gate"_s)    = g;
             m_filterEnv.input("gate"_s) = g;
+            m_pitchEnv1.input("gate"_s) = g;
+            m_pitchEnv2.input("gate"_s) = g;
         }
         void setAttack(float t)
         {
@@ -280,6 +298,58 @@ public:
         void setAmount(float hz)
         {
             m_amount.input("value"_s) = hz;
+        }
+    };
+
+    // --- Pitch envelope: controls osc1 + osc2 pitch = base + env * amount ---
+    class PitchEnvelope
+    {
+        Graph::envelope_t& m_env1;
+        Graph::control_t& m_amount1;
+        Graph::envelope_t& m_env2;
+        Graph::control_t& m_amount2;
+
+    public:
+        PitchEnvelope(Graph::envelope_t& env1,
+                      Graph::control_t& amount1,
+                      Graph::envelope_t& env2,
+                      Graph::control_t& amount2)
+        : m_env1(env1)
+        , m_amount1(amount1)
+        , m_env2(env2)
+        , m_amount2(amount2)
+        {
+        }
+
+        void setAttack(float t)
+        {
+            m_env1.input("attack"_s) = t;
+            m_env2.input("attack"_s) = t;
+        }
+        void setDecay(float t)
+        {
+            m_env1.input("decay"_s) = t;
+            m_env2.input("decay"_s) = t;
+        }
+        void setSustain(float s)
+        {
+            m_env1.input("sustain"_s) = s;
+            m_env2.input("sustain"_s) = s;
+        }
+        void setRelease(float t)
+        {
+            m_env1.input("release"_s) = t;
+            m_env2.input("release"_s) = t;
+        }
+        void setSampleRate(float sr)
+        {
+            m_env1.input("samplerate"_s) = sr;
+            m_env2.input("samplerate"_s) = sr;
+        }
+        void setAmount(float hz)
+        {
+            m_amount1.input("value"_s) = hz;
+            m_amount2.input("value"_s) = hz;
         }
     };
 
@@ -364,11 +434,11 @@ public:
 
         void setFreq(float hz)
         {
-            m_pwm.input("frequency"_s).input("x"_s).input("value"_s) = hz;
+            m_pwm.input("frequency"_s).input("x"_s).input("x"_s).input("value"_s) = hz;
         }
         void setGlideDuration(size_t samples)
         {
-            m_pwm.input("frequency"_s).input("x"_s).input("duration"_s) = samples;
+            m_pwm.input("frequency"_s).input("x"_s).input("x"_s).input("duration"_s) = samples;
         }
         void setGain(float g)
         {
@@ -416,23 +486,29 @@ public:
         // Pitch LFO
         void setPitchLfoRate(float hz)
         {
-            m_pwm.input("frequency"_s).input("y"_s).input("frequency"_s).input("value"_s) = hz;
+            m_pwm.input("frequency"_s)
+                .input("x"_s)
+                .input("y"_s)
+                .input("frequency"_s)
+                .input("value"_s) = hz;
         }
         void setPitchLfoDepth(float d)
         {
-            m_pwm.input("frequency"_s).input("y"_s).input("gain"_s).input("value"_s) = d;
+            m_pwm.input("frequency"_s).input("x"_s).input("y"_s).input("gain"_s).input("value"_s) =
+                d;
         }
         void setPitchLfoShape(Graph::shape s)
         {
-            m_pwm.input("frequency"_s).input("y"_s).input("shape"_s) = s;
+            m_pwm.input("frequency"_s).input("x"_s).input("y"_s).input("shape"_s) = s;
         }
         void setPitchLfoSampleRate(float sr)
         {
-            m_pwm.input("frequency"_s).input("y"_s).input("samplerate"_s) = sr;
+            m_pwm.input("frequency"_s).input("x"_s).input("y"_s).input("samplerate"_s) = sr;
         }
         void setPitchLfoPhase(float p)
         {
-            m_pwm.input("frequency"_s).input("y"_s).input("phase"_s).input("value"_s) = p;
+            m_pwm.input("frequency"_s).input("x"_s).input("y"_s).input("phase"_s).input("value"_s) =
+                p;
         }
     };
 
@@ -478,9 +554,19 @@ public:
 
     auto envelope()
     {
-        return AmpEnvelope{
-            filterNode().input("signal"_s).input("x"_s),
-            filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("x"_s)};
+        auto& mixer = filterNode().input("signal"_s).input("y"_s);
+        return AmpEnvelope{filterNode().input("signal"_s).input("x"_s),
+                           filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("x"_s),
+                           mixer.template input<0>()
+                               .input("signal"_s)
+                               .input("frequency"_s)
+                               .input("y"_s)
+                               .input("x"_s),
+                           mixer.template input<1>()
+                               .input("signal"_s)
+                               .input("frequency"_s)
+                               .input("y"_s)
+                               .input("x"_s)};
     }
 
     auto filterEnvelope()
@@ -489,6 +575,31 @@ public:
             filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("x"_s),
             filterNode().input("frequency"_s).input("x"_s).input("x"_s),
             filterNode().input("frequency"_s).input("x"_s).input("y"_s).input("y"_s)};
+    }
+
+    auto pitchEnvelope()
+    {
+        auto& mixer = filterNode().input("signal"_s).input("y"_s);
+        return PitchEnvelope{mixer.template input<0>()
+                                 .input("signal"_s)
+                                 .input("frequency"_s)
+                                 .input("y"_s)
+                                 .input("x"_s),
+                             mixer.template input<0>()
+                                 .input("signal"_s)
+                                 .input("frequency"_s)
+                                 .input("y"_s)
+                                 .input("y"_s),
+                             mixer.template input<1>()
+                                 .input("signal"_s)
+                                 .input("frequency"_s)
+                                 .input("y"_s)
+                                 .input("x"_s),
+                             mixer.template input<1>()
+                                 .input("signal"_s)
+                                 .input("frequency"_s)
+                                 .input("y"_s)
+                                 .input("y"_s)};
     }
 
     auto filter()

@@ -95,6 +95,29 @@ sub37::Synth::Synth(size_t bufferSize, float samplerate)
     filterEnvelope().setSustain(0.0f);
     filterEnvelope().setRelease(0.2f);
 
+    // --- Pitch envelope: off by default ---
+    pitchEnvelope().setSampleRate(samplerate);
+    pitchEnvelope().setAttack(0.01f);
+    pitchEnvelope().setDecay(0.3f);
+    pitchEnvelope().setSustain(0.0f);
+    pitchEnvelope().setRelease(0.1f);
+    pitchEnvelope().setAmount(0.0f);
+
+    // Initialize sub + pwm pitch envelopes (amount=0, no effect)
+    {
+        auto& mixer = filterNode().input("signal"_s).input("y"_s);
+        // Sub (bus 2) pitch envelope
+        auto& subPitchEnv =
+            mixer.template input<2>().input("signal"_s).input("frequency"_s).input("y"_s);
+        subPitchEnv.input("x"_s).input("samplerate"_s) = samplerate;
+        subPitchEnv.input("y"_s).input("value"_s)      = 0.0f;
+        // PWM (bus 4) pitch envelope
+        auto& pwmPitchEnv =
+            mixer.template input<4>().input("signal"_s).input("frequency"_s).input("y"_s);
+        pwmPitchEnv.input("x"_s).input("samplerate"_s) = samplerate;
+        pwmPitchEnv.input("y"_s).input("value"_s)      = 0.0f;
+    }
+
     // --- Feedback delay: off by default ---
     setDelayTime(0.0f);
     setFeedback(0.0f);

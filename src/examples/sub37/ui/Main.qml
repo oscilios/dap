@@ -93,6 +93,9 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
+                PitchEnvPanel {
+                    Layout.fillHeight: true
+                }
             }
         }
 
