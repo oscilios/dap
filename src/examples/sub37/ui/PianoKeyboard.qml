@@ -202,7 +202,7 @@ Item {
                 readonly property bool held: root.activeNotes.indexOf(modelData) !== -1
                 readonly property bool arpPlaying: root.arpNote === modelData
                 readonly property int wkIdx: root.whiteKeyIndex(modelData)
-                x: wkIdx * (root.whiteKeyWidth + 1) + root.whiteKeyWidth * 0.65
+                x: (wkIdx - 1) * (root.whiteKeyWidth + 1) + root.whiteKeyWidth * 0.65
                 y: 0
                 width: root.whiteKeyWidth * 0.7
                 height: keysArea.height * 0.6

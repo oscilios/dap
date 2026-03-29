@@ -9,11 +9,20 @@ ColumnLayout {
     property real from: 0.0
     property real to: 1.0
     property real value: 0.0
+    property real defaultValue: value
     property int decimals: 2
     property real stepSize: 0.01
+    property bool _defaultCaptured: false
 
     spacing: 2
     implicitWidth: 80
+
+    Component.onCompleted: {
+        if (!_defaultCaptured) {
+            defaultValue = value;
+            _defaultCaptured = true;
+        }
+    }
 
     Label {
         text: root.label
@@ -121,5 +130,10 @@ ColumnLayout {
         font.family: "Helvetica Neue"
         color: "#888888"
         Layout.alignment: Qt.AlignHCenter
+
+        MouseArea {
+            anchors.fill: parent
+            onDoubleClicked: root.value = root.defaultValue
+        }
     }
 }
