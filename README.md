@@ -8,11 +8,11 @@ Learning and playing with meta programming. Experimenting with compile time grap
 Although the code is mostly platform independant, this project as is will only build successfully on darwin.
 
 # example code
-Following an example for creating an fm oscillator where all controls are smoothed.  Please take a look at src/examples/crtp_synth for a more complex example.
+Following an example for creating an fm oscillator where all controls are smoothed. Take a look at src/examples/sub37 for a real use case (it optionally uses Qt6 for the GUI).
 
 # build
 ```cmake
-cmake -S . -B build --toolchain ToolChain.cmake
+cmake -S . -B build --toolchain ToolChain.cmake [-DCMAKE_PREFIX_PATH=~/Qt/6.10.2/macos]
 cmake --build build
 ```
 

@@ -30,7 +30,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   eigen
   GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-  GIT_TAG 3.3.8
+  GIT_TAG 5.0.0
   SYSTEM
   FIND_PACKAGE_ARGS
   )

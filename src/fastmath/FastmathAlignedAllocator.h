@@ -25,7 +25,9 @@ class dap::fastmath::AlignedAllocator
 public:
     using value_type      = T;
     using pointer         = value_type*;
+#if __cplusplus <= 201703L
     using const_pointer   = const value_type*;
+#endif
     using reference       = value_type&;
     using const_reference = const value_type&;
     using size_type       = std::size_t;
@@ -38,8 +40,11 @@ public:
         using other = AlignedAllocator<U>;
     };
 
-    inline pointer allocate(size_type cnt,
-                            typename std::allocator<void>::const_pointer /*unused*/ = nullptr)
+    inline pointer allocate(size_type cnt
+#if __cplusplus <= 201703L
+                            , typename std::allocator<void>::const_pointer /*unused*/ = nullptr
+#endif
+                            )
     {
         size_t bytes = cnt * sizeof(T);
         void* data   = nullptr;
