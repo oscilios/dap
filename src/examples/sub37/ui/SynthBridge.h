@@ -2,10 +2,13 @@
 #include "../Arpeggiator.h"
 #include "../Sequencer.h"
 #include <QObject>
+#include <QStringList>
 #include <QTimer>
 #include <QVariantList>
 #include <QtQmlIntegration>
 #include <memory>
+
+class QJsonObject;
 
 namespace sub37
 {
@@ -135,6 +138,10 @@ class SynthBridge : public QObject
     Q_PROPERTY(int seqSelectedStep READ seqSelectedStep WRITE setSeqSelectedStep NOTIFY
                    seqSelectedStepChanged)
     Q_PROPERTY(QVariantList seqNotes READ seqNotes NOTIFY seqNotesChanged)
+
+    // Presets
+    Q_PROPERTY(QStringList presetList READ presetList NOTIFY presetListChanged)
+    Q_PROPERTY(QString currentPreset READ currentPreset NOTIFY currentPresetChanged)
 
 public:
     explicit SynthBridge(QObject* parent = nullptr);
@@ -388,6 +395,16 @@ public:
     Q_INVOKABLE void seqClearStep(int step);
     Q_INVOKABLE void seqClear();
 
+    // Presets
+    QStringList presetList() const;
+    QString currentPreset() const
+    {
+        return m_currentPreset;
+    }
+    Q_INVOKABLE void savePreset(const QString& name);
+    Q_INVOKABLE void loadPreset(const QString& name);
+    Q_INVOKABLE void deletePreset(const QString& name);
+
     void setDeviceIndex(int idx);
 
     Q_INVOKABLE bool startAudio();
@@ -538,6 +555,9 @@ signals:
     void seqSelectedStepChanged();
     void seqNotesChanged();
 
+    void presetListChanged();
+    void currentPresetChanged();
+
 private:
     void initAudioDevice(int deviceIdx);
     void updateOsc2Freq();
@@ -545,6 +565,9 @@ private:
     void updateArpTimer();
     void seqStep();
     void updateSeqTimer();
+    QJsonObject toJson() const;
+    void fromJson(const QJsonObject& obj);
+    QString presetDir() const;
 
     std::unique_ptr<sub37::AudioProcess> m_process;
     sub37::Synth* m_synth = nullptr;
@@ -629,4 +652,7 @@ private:
     int m_seqSubdivision  = 2; // Eighth notes
     int m_seqCurrentStep  = -1;
     int m_seqSelectedStep = -1;
+
+    // Preset
+    QString m_currentPreset;
 };

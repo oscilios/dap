@@ -4,6 +4,11 @@
 #include "audioio/AudioDeviceList.h"
 #include "dsp/NoiseGenerator.h"
 #include "dsp/OscillatorFunctions.h"
+#include <QDir>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
 #include <QTimer>
 #include <cmath>
 
@@ -759,4 +764,320 @@ void SynthBridge::setSeqSelectedStep(int v)
         return;
     m_seqSelectedStep = v;
     emit seqSelectedStepChanged();
+}
+
+// --- Presets ---
+
+QString SynthBridge::presetDir() const
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/presets";
+}
+
+QJsonObject SynthBridge::toJson() const
+{
+    QJsonObject o;
+    o["osc1Shape"]    = m_osc1Shape;
+    o["osc1Level"]    = m_osc1Level;
+    o["osc2Shape"]    = m_osc2Shape;
+    o["osc2Level"]    = m_osc2Level;
+    o["osc2BeatFreq"] = m_osc2BeatFreq;
+    o["osc2Octave"]   = m_osc2Octave;
+    o["subLevel"]     = m_subLevel;
+
+    o["pwmLevel"]      = m_pwmLevel;
+    o["pwmDutyCycle"]  = m_pwmDutyCycle;
+    o["pwmDcLfoRate"]  = m_pwmDcLfoRate;
+    o["pwmDcLfoDepth"] = m_pwmDcLfoDepth;
+    o["pwmDcLfoShape"] = m_pwmDcLfoShape;
+
+    o["noiseGain"]  = m_noiseGain;
+    o["noiseColor"] = m_noiseColor;
+
+    o["ampAttack"]  = m_ampAttack;
+    o["ampDecay"]   = m_ampDecay;
+    o["ampSustain"] = m_ampSustain;
+    o["ampRelease"] = m_ampRelease;
+
+    o["filterCutoff"]    = m_filterCutoff;
+    o["filterResonance"] = m_filterResonance;
+    o["filterEnvAmount"] = m_filterEnvAmount;
+    o["filterAttack"]    = m_filterAttack;
+    o["filterDecay"]     = m_filterDecay;
+    o["filterSustain"]   = m_filterSustain;
+    o["filterRelease"]   = m_filterRelease;
+
+    o["pitchEnvAttack"]  = m_pitchEnvAttack;
+    o["pitchEnvDecay"]   = m_pitchEnvDecay;
+    o["pitchEnvSustain"] = m_pitchEnvSustain;
+    o["pitchEnvRelease"] = m_pitchEnvRelease;
+    o["pitchEnvAmount"]  = m_pitchEnvAmount;
+
+    o["pitchLfoRate"]  = m_pitchLfoRate;
+    o["pitchLfoDepth"] = m_pitchLfoDepth;
+    o["pitchLfoShape"] = m_pitchLfoShape;
+
+    o["pitchLfo2Rate"]  = m_pitchLfo2Rate;
+    o["pitchLfo2Depth"] = m_pitchLfo2Depth;
+    o["pitchLfo2Shape"] = m_pitchLfo2Shape;
+
+    o["filterLfoRate"]  = m_filterLfoRate;
+    o["filterLfoDepth"] = m_filterLfoDepth;
+    o["filterLfoShape"] = m_filterLfoShape;
+
+    o["delayTime"] = m_delayTime;
+    o["feedback"]  = m_feedback;
+
+    o["glideTime"] = m_glideTime;
+
+    // Arpeggiator
+    o["arpEnabled"]     = m_arpEnabled;
+    o["arpBpm"]         = m_arpBpm;
+    o["arpPattern"]     = m_arpPattern;
+    o["arpOctaveRange"] = m_arpOctaveRange;
+    o["arpGate"]        = m_arpGate;
+    o["arpSubdivision"] = m_arpSubdivision;
+
+    // Sequencer
+    o["seqBpm"]         = m_seqBpm;
+    o["seqStepCount"]   = m_sequencer.stepCount();
+    o["seqGate"]        = m_seqGate;
+    o["seqSubdivision"] = m_seqSubdivision;
+
+    QJsonArray notes;
+    for (int i = 0; i < sub37::Sequencer::MaxSteps; ++i)
+        notes.append(m_sequencer.getNote(i));
+    o["seqNotes"] = notes;
+
+    return o;
+}
+
+void SynthBridge::fromJson(const QJsonObject& o)
+{
+    // Write members directly and push to synth engine, bypassing the
+    // qFuzzyCompare guards in the setters.  The float->double->float
+    // round-trip through JSON makes qFuzzyCompare treat matching values
+    // as equal, causing it to skip the update.
+
+    using Shape = dap::dsp::OscillatorFunctions::Shape;
+    using Color = dap::dsp::NoiseGenerator<dap::dsp::UniformDistribution>::Color;
+
+#define LOAD_FLOAT(KEY, MEMBER, SYNTH_CALL, SIGNAL)      \
+    if (o.contains(#KEY))                                \
+    {                                                    \
+        MEMBER = static_cast<float>(o[#KEY].toDouble()); \
+        if (m_synth)                                     \
+            m_synth->SYNTH_CALL;                         \
+        emit SIGNAL();                                   \
+    }
+
+#define LOAD_INT(KEY, MEMBER, SYNTH_CALL, SIGNAL) \
+    if (o.contains(#KEY))                         \
+    {                                             \
+        MEMBER = o[#KEY].toInt();                 \
+        if (m_synth)                              \
+            m_synth->SYNTH_CALL;                  \
+        emit SIGNAL();                            \
+    }
+
+    // clang-format off
+    LOAD_INT(osc1Shape, m_osc1Shape, osc1().setShape(static_cast<Shape>(m_osc1Shape)), osc1ShapeChanged)
+    LOAD_FLOAT(osc1Level, m_osc1Level, osc1().setBusLevel(m_osc1Level), osc1LevelChanged)
+    LOAD_INT(osc2Shape, m_osc2Shape, osc2().setShape(static_cast<Shape>(m_osc2Shape)), osc2ShapeChanged)
+    LOAD_FLOAT(osc2Level, m_osc2Level, osc2().setBusLevel(m_osc2Level), osc2LevelChanged)
+    LOAD_FLOAT(subLevel, m_subLevel, setBusGain<2>(m_subLevel), subLevelChanged)
+    // clang-format on
+
+    if (o.contains("osc2Octave"))
+    {
+        m_osc2Octave = o["osc2Octave"].toInt();
+        emit osc2OctaveChanged();
+    }
+
+    if (o.contains("osc2BeatFreq"))
+    {
+        m_osc2BeatFreq = static_cast<float>(o["osc2BeatFreq"].toDouble());
+        if (m_synth)
+            m_synth->setOsc2BeatFreq(m_osc2BeatFreq);
+        emit osc2BeatFreqChanged();
+    }
+
+    // clang-format off
+    LOAD_FLOAT(pwmLevel, m_pwmLevel, pwm().setBusLevel(m_pwmLevel), pwmLevelChanged)
+    LOAD_FLOAT(pwmDutyCycle, m_pwmDutyCycle, pwm().setDutyCycle(m_pwmDutyCycle), pwmDutyCycleChanged)
+    LOAD_FLOAT(pwmDcLfoRate, m_pwmDcLfoRate, pwm().setDcLfoRate(m_pwmDcLfoRate), pwmDcLfoRateChanged)
+    LOAD_FLOAT(pwmDcLfoDepth, m_pwmDcLfoDepth, pwm().setDcLfoDepth(m_pwmDcLfoDepth), pwmDcLfoDepthChanged)
+    LOAD_INT(pwmDcLfoShape, m_pwmDcLfoShape, pwm().setDcLfoShape(static_cast<Shape>(m_pwmDcLfoShape)), pwmDcLfoShapeChanged)
+
+    LOAD_FLOAT(noiseGain, m_noiseGain, noise().setGain(m_noiseGain), noiseGainChanged)
+    LOAD_INT(noiseColor, m_noiseColor, noise().setColor(static_cast<Color>(m_noiseColor)), noiseColorChanged)
+
+    LOAD_FLOAT(ampAttack, m_ampAttack, envelope().setAttack(m_ampAttack), ampAttackChanged)
+    LOAD_FLOAT(ampDecay, m_ampDecay, envelope().setDecay(m_ampDecay), ampDecayChanged)
+    LOAD_FLOAT(ampSustain, m_ampSustain, envelope().setSustain(m_ampSustain), ampSustainChanged)
+    LOAD_FLOAT(ampRelease, m_ampRelease, envelope().setRelease(m_ampRelease), ampReleaseChanged)
+
+    LOAD_FLOAT(filterCutoff, m_filterCutoff, filterEnvelope().setBase(m_filterCutoff), filterCutoffChanged)
+    LOAD_FLOAT(filterResonance, m_filterResonance, filter().setResonance(m_filterResonance), filterResonanceChanged)
+    LOAD_FLOAT(filterEnvAmount, m_filterEnvAmount, filterEnvelope().setAmount(m_filterEnvAmount), filterEnvAmountChanged)
+    LOAD_FLOAT(filterAttack, m_filterAttack, filterEnvelope().setAttack(m_filterAttack), filterAttackChanged)
+    LOAD_FLOAT(filterDecay, m_filterDecay, filterEnvelope().setDecay(m_filterDecay), filterDecayChanged)
+    LOAD_FLOAT(filterSustain, m_filterSustain, filterEnvelope().setSustain(m_filterSustain), filterSustainChanged)
+    LOAD_FLOAT(filterRelease, m_filterRelease, filterEnvelope().setRelease(m_filterRelease), filterReleaseChanged)
+
+    LOAD_FLOAT(pitchEnvAttack, m_pitchEnvAttack, pitchEnvelope().setAttack(m_pitchEnvAttack), pitchEnvAttackChanged)
+    LOAD_FLOAT(pitchEnvDecay, m_pitchEnvDecay, pitchEnvelope().setDecay(m_pitchEnvDecay), pitchEnvDecayChanged)
+    LOAD_FLOAT(pitchEnvSustain, m_pitchEnvSustain, pitchEnvelope().setSustain(m_pitchEnvSustain), pitchEnvSustainChanged)
+    LOAD_FLOAT(pitchEnvRelease, m_pitchEnvRelease, pitchEnvelope().setRelease(m_pitchEnvRelease), pitchEnvReleaseChanged)
+    LOAD_FLOAT(pitchEnvAmount, m_pitchEnvAmount, pitchEnvelope().setAmount(m_pitchEnvAmount), pitchEnvAmountChanged)
+    // clang-format on
+
+    // Pitch LFOs need to call the combined setters
+    if (o.contains("pitchLfoRate"))
+        m_pitchLfoRate = static_cast<float>(o["pitchLfoRate"].toDouble());
+    if (o.contains("pitchLfoDepth"))
+        m_pitchLfoDepth = static_cast<float>(o["pitchLfoDepth"].toDouble());
+    if (o.contains("pitchLfoShape"))
+        m_pitchLfoShape = o["pitchLfoShape"].toInt();
+    if (m_synth)
+        m_synth->setPitchLfo(m_pitchLfoRate, m_pitchLfoDepth, static_cast<Shape>(m_pitchLfoShape));
+    emit pitchLfoRateChanged();
+    emit pitchLfoDepthChanged();
+    emit pitchLfoShapeChanged();
+
+    if (o.contains("pitchLfo2Rate"))
+        m_pitchLfo2Rate = static_cast<float>(o["pitchLfo2Rate"].toDouble());
+    if (o.contains("pitchLfo2Depth"))
+        m_pitchLfo2Depth = static_cast<float>(o["pitchLfo2Depth"].toDouble());
+    if (o.contains("pitchLfo2Shape"))
+        m_pitchLfo2Shape = o["pitchLfo2Shape"].toInt();
+    if (m_synth)
+        m_synth->setPitchLfo2(
+            m_pitchLfo2Rate, m_pitchLfo2Depth, static_cast<Shape>(m_pitchLfo2Shape));
+    emit pitchLfo2RateChanged();
+    emit pitchLfo2DepthChanged();
+    emit pitchLfo2ShapeChanged();
+
+    // clang-format off
+    LOAD_FLOAT(filterLfoRate, m_filterLfoRate, filter().setLfoRate(m_filterLfoRate), filterLfoRateChanged)
+    LOAD_FLOAT(filterLfoDepth, m_filterLfoDepth, filter().setLfoDepth(m_filterLfoDepth), filterLfoDepthChanged)
+    LOAD_INT(filterLfoShape, m_filterLfoShape, filter().setLfoShape(static_cast<Shape>(m_filterLfoShape)), filterLfoShapeChanged)
+    // clang-format on
+
+    if (o.contains("delayTime"))
+    {
+        m_delayTime = static_cast<float>(o["delayTime"].toDouble());
+        if (m_synth)
+            m_synth->setDelayTime(m_delayTime * m_sampleRate);
+        emit delayTimeChanged();
+    }
+
+    if (o.contains("feedback"))
+    {
+        m_feedback = static_cast<float>(o["feedback"].toDouble());
+        if (m_synth)
+            m_synth->setFeedback(m_feedback);
+        emit feedbackChanged();
+    }
+
+    if (o.contains("glideTime"))
+    {
+        m_glideTime = static_cast<float>(o["glideTime"].toDouble());
+        if (m_synth)
+            m_synth->setGlide(static_cast<size_t>(m_glideTime * m_sampleRate));
+        emit glideTimeChanged();
+    }
+
+    // Arpeggiator
+    if (o.contains("arpBpm"))
+        setArpBpm(o["arpBpm"].toDouble());
+    if (o.contains("arpPattern"))
+        setArpPattern(o["arpPattern"].toInt());
+    if (o.contains("arpOctaveRange"))
+        setArpOctaveRange(o["arpOctaveRange"].toInt());
+    if (o.contains("arpGate"))
+        setArpGate(o["arpGate"].toDouble());
+    if (o.contains("arpSubdivision"))
+        setArpSubdivision(o["arpSubdivision"].toInt());
+    if (o.contains("arpEnabled"))
+        setArpEnabled(o["arpEnabled"].toBool());
+
+    // Sequencer
+    if (o.contains("seqBpm"))
+        setSeqBpm(o["seqBpm"].toDouble());
+    if (o.contains("seqGate"))
+        setSeqGate(o["seqGate"].toDouble());
+    if (o.contains("seqSubdivision"))
+        setSeqSubdivision(o["seqSubdivision"].toInt());
+    if (o.contains("seqStepCount"))
+        setSeqStepCount(o["seqStepCount"].toInt());
+
+    if (o.contains("seqNotes"))
+    {
+        auto arr = o["seqNotes"].toArray();
+        m_sequencer.clear();
+        for (int i = 0; i < arr.size() && i < sub37::Sequencer::MaxSteps; ++i)
+        {
+            int note = arr[i].toInt(-1);
+            if (note >= 0)
+                m_sequencer.setNote(i, note);
+        }
+        emit seqNotesChanged();
+    }
+
+#undef LOAD_FLOAT
+#undef LOAD_INT
+}
+
+QStringList SynthBridge::presetList() const
+{
+    QDir dir(presetDir());
+    if (!dir.exists())
+        return {};
+    auto entries = dir.entryList({"*.json"}, QDir::Files, QDir::Name);
+    QStringList names;
+    for (auto& e : entries)
+        names.append(e.chopped(5)); // strip ".json"
+    return names;
+}
+
+void SynthBridge::savePreset(const QString& name)
+{
+    QDir dir(presetDir());
+    if (!dir.exists())
+        dir.mkpath(".");
+
+    QFile file(dir.filePath(name + ".json"));
+    if (!file.open(QIODevice::WriteOnly))
+        return;
+
+    file.write(QJsonDocument(toJson()).toJson(QJsonDocument::Indented));
+    m_currentPreset = name;
+    emit currentPresetChanged();
+    emit presetListChanged();
+}
+
+void SynthBridge::loadPreset(const QString& name)
+{
+    QFile file(presetDir() + "/" + name + ".json");
+    if (!file.open(QIODevice::ReadOnly))
+        return;
+
+    auto doc = QJsonDocument::fromJson(file.readAll());
+    if (!doc.isObject())
+        return;
+
+    fromJson(doc.object());
+    m_currentPreset = name;
+    emit currentPresetChanged();
+}
+
+void SynthBridge::deletePreset(const QString& name)
+{
+    QFile::remove(presetDir() + "/" + name + ".json");
+    if (m_currentPreset == name)
+    {
+        m_currentPreset.clear();
+        emit currentPresetChanged();
+    }
+    emit presetListChanged();
 }
