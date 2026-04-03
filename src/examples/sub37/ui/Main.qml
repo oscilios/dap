@@ -51,6 +51,7 @@ ApplicationWindow {
                     ComboBox {
                         id: presetCombo
                         anchors.fill: parent
+                        focusPolicy: Qt.NoFocus
                         model: SynthBridge.presetList
                         font.pixelSize: 11
                         font.family: "Helvetica Neue"
@@ -61,6 +62,7 @@ ApplicationWindow {
 
                         onActivated: (index) => {
                             SynthBridge.loadPreset(model[index]);
+                            piano.forceActiveFocus();
                         }
 
                         background: Item {}
@@ -172,6 +174,7 @@ ApplicationWindow {
                         enabled: SynthBridge.currentPreset.length > 0
                         onClicked: {
                             SynthBridge.deletePreset(SynthBridge.currentPreset);
+                            piano.forceActiveFocus();
                         }
                     }
                 }
@@ -314,6 +317,10 @@ ApplicationWindow {
                 presetNameField.forceActiveFocus();
                 presetNameField.selectAll();
             }
+
+            onClosed: {
+                piano.forceActiveFocus();
+            }
         }
 
         // All controls
@@ -382,6 +389,7 @@ ApplicationWindow {
             border.width: 1
 
             PianoKeyboard {
+                id: piano
                 anchors.fill: parent
                 anchors.margins: 6
             }
