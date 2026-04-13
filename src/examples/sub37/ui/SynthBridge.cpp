@@ -2,6 +2,7 @@
 #include "AudioProcess.h"
 #include "Sub37Synth.h"
 #include "audioio/AudioDeviceList.h"
+#include "dsp/Distortion.h"
 #include "dsp/NoiseGenerator.h"
 #include "dsp/OscillatorFunctions.h"
 #include <QDir>
@@ -95,6 +96,18 @@ void SynthBridge::initAudioDevice(int deviceIdx)
     m_synth->filter().setLfoRate(m_filterLfoRate);
     m_synth->filter().setLfoDepth(m_filterLfoDepth);
     m_synth->filter().setLfoShape(static_cast<Shape>(m_filterLfoShape));
+
+    m_synth->distortion().setDrive(m_distDrive);
+    m_synth->distortion().setMix(m_distMix);
+    m_synth->distortion().setParam(m_distParam);
+    m_synth->distortion().setType(static_cast<dap::dsp::Distortion::Type>(m_distType));
+
+    m_synth->flanger().setDelay(m_flangerDelay * m_sampleRate);
+    m_synth->flanger().setDepth(m_flangerDepth * m_sampleRate);
+    m_synth->flanger().setRate(m_flangerRate);
+    m_synth->flanger().setFeedback(m_flangerFeedback);
+    m_synth->flanger().setWet(m_flangerWet);
+    m_synth->flanger().setSampleRate(m_sampleRate);
 
     m_synth->setDelayTime(m_delayTime * m_sampleRate);
     m_synth->setFeedback(m_feedback);
@@ -277,7 +290,48 @@ IMPL_FLOAT_SETTER(PitchEnvAmount,
 IMPL_FLOAT_SETTER(FilterLfoRate, m_filterLfoRate, filter().setLfoRate(v), filterLfoRateChanged)
 IMPL_FLOAT_SETTER(FilterLfoDepth, m_filterLfoDepth, filter().setLfoDepth(v), filterLfoDepthChanged)
 
+IMPL_FLOAT_SETTER(DistDrive, m_distDrive, distortion().setDrive(v), distDriveChanged)
+IMPL_FLOAT_SETTER(DistMix, m_distMix, distortion().setMix(v), distMixChanged)
+IMPL_FLOAT_SETTER(DistParam, m_distParam, distortion().setParam(v), distParamChanged)
+
+IMPL_FLOAT_SETTER(FlangerRate, m_flangerRate, flanger().setRate(v), flangerRateChanged)
+IMPL_FLOAT_SETTER(FlangerFeedback,
+                  m_flangerFeedback,
+                  flanger().setFeedback(v),
+                  flangerFeedbackChanged)
+IMPL_FLOAT_SETTER(FlangerWet, m_flangerWet, flanger().setWet(v), flangerWetChanged)
+
 #undef IMPL_FLOAT_SETTER
+
+void SynthBridge::setDistType(int v)
+{
+    if (m_distType == v)
+        return;
+    m_distType = v;
+    if (m_synth)
+        m_synth->distortion().setType(static_cast<dap::dsp::Distortion::Type>(v));
+    emit distTypeChanged();
+}
+
+void SynthBridge::setFlangerDelay(float v)
+{
+    if (qFuzzyCompare(m_flangerDelay, v))
+        return;
+    m_flangerDelay = v;
+    if (m_synth)
+        m_synth->flanger().setDelay(v * m_sampleRate);
+    emit flangerDelayChanged();
+}
+
+void SynthBridge::setFlangerDepth(float v)
+{
+    if (qFuzzyCompare(m_flangerDepth, v))
+        return;
+    m_flangerDepth = v;
+    if (m_synth)
+        m_synth->flanger().setDepth(v * m_sampleRate);
+    emit flangerDepthChanged();
+}
 
 void SynthBridge::setPwmDcLfoShape(int v)
 {
@@ -824,6 +878,17 @@ QJsonObject SynthBridge::toJson() const
     o["filterLfoDepth"] = m_filterLfoDepth;
     o["filterLfoShape"] = m_filterLfoShape;
 
+    o["distDrive"] = m_distDrive;
+    o["distMix"]   = m_distMix;
+    o["distParam"] = m_distParam;
+    o["distType"]  = m_distType;
+
+    o["flangerDelay"]    = m_flangerDelay;
+    o["flangerDepth"]    = m_flangerDepth;
+    o["flangerRate"]     = m_flangerRate;
+    o["flangerFeedback"] = m_flangerFeedback;
+    o["flangerWet"]      = m_flangerWet;
+
     o["delayTime"] = m_delayTime;
     o["feedback"]  = m_feedback;
 
@@ -961,6 +1026,42 @@ void SynthBridge::fromJson(const QJsonObject& o)
     LOAD_FLOAT(filterLfoRate, m_filterLfoRate, filter().setLfoRate(m_filterLfoRate), filterLfoRateChanged)
     LOAD_FLOAT(filterLfoDepth, m_filterLfoDepth, filter().setLfoDepth(m_filterLfoDepth), filterLfoDepthChanged)
     LOAD_INT(filterLfoShape, m_filterLfoShape, filter().setLfoShape(static_cast<Shape>(m_filterLfoShape)), filterLfoShapeChanged)
+    // clang-format on
+
+    // clang-format off
+    LOAD_FLOAT(distDrive, m_distDrive, distortion().setDrive(m_distDrive), distDriveChanged)
+    LOAD_FLOAT(distMix, m_distMix, distortion().setMix(m_distMix), distMixChanged)
+    LOAD_FLOAT(distParam, m_distParam, distortion().setParam(m_distParam), distParamChanged)
+    // clang-format on
+
+    if (o.contains("distType"))
+    {
+        m_distType = o["distType"].toInt();
+        if (m_synth)
+            m_synth->distortion().setType(static_cast<dap::dsp::Distortion::Type>(m_distType));
+        emit distTypeChanged();
+    }
+
+    if (o.contains("flangerDelay"))
+    {
+        m_flangerDelay = static_cast<float>(o["flangerDelay"].toDouble());
+        if (m_synth)
+            m_synth->flanger().setDelay(m_flangerDelay * m_sampleRate);
+        emit flangerDelayChanged();
+    }
+
+    if (o.contains("flangerDepth"))
+    {
+        m_flangerDepth = static_cast<float>(o["flangerDepth"].toDouble());
+        if (m_synth)
+            m_synth->flanger().setDepth(m_flangerDepth * m_sampleRate);
+        emit flangerDepthChanged();
+    }
+
+    // clang-format off
+    LOAD_FLOAT(flangerRate, m_flangerRate, flanger().setRate(m_flangerRate), flangerRateChanged)
+    LOAD_FLOAT(flangerFeedback, m_flangerFeedback, flanger().setFeedback(m_flangerFeedback), flangerFeedbackChanged)
+    LOAD_FLOAT(flangerWet, m_flangerWet, flanger().setWet(m_flangerWet), flangerWetChanged)
     // clang-format on
 
     if (o.contains("delayTime"))

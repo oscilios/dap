@@ -118,6 +118,20 @@ sub37::Synth::Synth(size_t bufferSize, float samplerate)
         pwmPitchEnv.input("y"_s).input("value"_s)      = 0.0f;
     }
 
+    // --- Distortion: off by default (mix=0 → dry passthrough) ---
+    distortion().setDrive(1.0f);
+    distortion().setMix(0.0f);
+    distortion().setParam(0.8f);
+    distortion().setType(dap::dsp::Distortion::Type::SoftClip);
+
+    // --- Flanger: off by default (wet=0 → dry passthrough) ---
+    flanger().setDelay(200.0f); // ~4.5 ms at 44.1kHz
+    flanger().setDepth(100.0f); // ~2.3 ms sweep
+    flanger().setRate(0.5f);    // 0.5 Hz LFO
+    flanger().setFeedback(0.7f);
+    flanger().setWet(0.0f);
+    flanger().setSampleRate(samplerate);
+
     // --- Feedback delay: off by default ---
     setDelayTime(0.0f);
     setFeedback(0.0f);

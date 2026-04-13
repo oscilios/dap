@@ -2,7 +2,9 @@
 #include "base/KeyValueTuple.h"
 #include "crtp/nodes/Processor.h"
 #include "dsp/CombFilter.h"
+#include "dsp/Distortion.h"
 #include "dsp/EnvelopeGenerator.h"
+#include "dsp/Flanger.h"
 #include "dsp/LadderFilter.h"
 #include "dsp/Mixer.h"
 #include "dsp/NoiseGenerator.h"
@@ -117,6 +119,35 @@ class sub37::Synth final
                              "resonance"_s,
                              "samplerate"_s));
 
+        // Distortion: drive, mix, param are smoothed controls; type is enum
+        using distortion_type = dap::dsp::Distortion::Type;
+        template <typename T>
+        using distortion_t =
+            decltype(processor<dap::dsp::Distortion>::
+                         with_inputs<T, control_t, control_t, control_t, distortion_type>::named(
+                             "signal"_s,
+                             "drive"_s,
+                             "mix"_s,
+                             "param"_s,
+                             "type"_s));
+
+        // Flanger: all parameters are smoothed controls + samplerate
+        template <typename T>
+        using flanger_t = decltype(processor<dap::dsp::Flanger<scalar_t>>::with_inputs<
+                                   T,
+                                   control_t,
+                                   control_t,
+                                   control_t,
+                                   control_t,
+                                   control_t,
+                                   samplerate_t>::named("signal"_s,
+                                                        "delay"_s,
+                                                        "depth"_s,
+                                                        "rate"_s,
+                                                        "feedback"_s,
+                                                        "wet"_s,
+                                                        "samplerate"_s));
+
         // Feedback comb filter (65536 samples ≈ 1.5s at 44.1kHz)
         template <typename T>
         using feedback_t = decltype(processor<dap::dsp::FeedbackCombFilter<scalar_t, 65536>>::
@@ -124,8 +155,8 @@ class sub37::Synth final
                                                                                     "delay"_s,
                                                                                     "feedback"_s));
 
-        // Final output type
-        using type  = feedback_t<filter_t<osc_output_t>>;
+        // Final output type: feedback(flanger(distortion(filter(ampEnv * mixer))))
+        using type  = feedback_t<flanger_t<distortion_t<filter_t<osc_output_t>>>>;
         using shape = shape_t;
     };
 
@@ -353,8 +384,77 @@ public:
         }
     };
 
+    // --- Distortion accessor ---
+    using filter_node_t     = Graph::filter_t<Graph::osc_output_t>;
+    using distortion_node_t = Graph::distortion_t<filter_node_t>;
+    using flanger_node_t    = Graph::flanger_t<distortion_node_t>;
+
+    class DistortionControl
+    {
+        distortion_node_t& m_dist;
+
+    public:
+        DistortionControl(distortion_node_t& dist)
+        : m_dist(dist)
+        {
+        }
+
+        void setDrive(float v)
+        {
+            m_dist.input("drive"_s).input("value"_s) = v;
+        }
+        void setMix(float v)
+        {
+            m_dist.input("mix"_s).input("value"_s) = v;
+        }
+        void setParam(float v)
+        {
+            m_dist.input("param"_s).input("value"_s) = v;
+        }
+        void setType(Graph::distortion_type t)
+        {
+            m_dist.input("type"_s) = t;
+        }
+    };
+
+    // --- Flanger accessor ---
+    class FlangerControl
+    {
+        flanger_node_t& m_flanger;
+
+    public:
+        FlangerControl(flanger_node_t& flanger)
+        : m_flanger(flanger)
+        {
+        }
+
+        void setDelay(float samples)
+        {
+            m_flanger.input("delay"_s).input("value"_s) = samples;
+        }
+        void setDepth(float samples)
+        {
+            m_flanger.input("depth"_s).input("value"_s) = samples;
+        }
+        void setRate(float hz)
+        {
+            m_flanger.input("rate"_s).input("value"_s) = hz;
+        }
+        void setFeedback(float fb)
+        {
+            m_flanger.input("feedback"_s).input("value"_s) = fb;
+        }
+        void setWet(float w)
+        {
+            m_flanger.input("wet"_s).input("value"_s) = w;
+        }
+        void setSampleRate(float sr)
+        {
+            m_flanger.input("samplerate"_s) = sr;
+        }
+    };
+
     // --- Filter (resonance + LFO mod) ---
-    using filter_node_t = Graph::filter_t<Graph::osc_output_t>;
 
     class Filter
     {
@@ -514,10 +614,18 @@ public:
 
     Synth(size_t bufferSize, float samplerate);
 
-    // Oscillator accessors (bus 0=osc1, 1=osc2, 2=sub)
-    auto& filterNode()
+    // Node accessors — navigate: feedback → flanger → distortion → filter
+    auto& flangerNode()
     {
         return m_graph.input("input"_s);
+    }
+    auto& distortionNode()
+    {
+        return flangerNode().input("signal"_s);
+    }
+    auto& filterNode()
+    {
+        return distortionNode().input("signal"_s);
     }
 
     template <size_t N>
@@ -605,6 +713,16 @@ public:
     auto filter()
     {
         return Filter{filterNode()};
+    }
+
+    auto distortion()
+    {
+        return DistortionControl{distortionNode()};
+    }
+
+    auto flanger()
+    {
+        return FlangerControl{flangerNode()};
     }
 
     auto noise()

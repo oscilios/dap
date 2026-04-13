@@ -106,6 +106,22 @@ class SynthBridge : public QObject
     Q_PROPERTY(
         int filterLfoShape READ filterLfoShape WRITE setFilterLfoShape NOTIFY filterLfoShapeChanged)
 
+    // Distortion
+    Q_PROPERTY(float distDrive READ distDrive WRITE setDistDrive NOTIFY distDriveChanged)
+    Q_PROPERTY(float distMix READ distMix WRITE setDistMix NOTIFY distMixChanged)
+    Q_PROPERTY(float distParam READ distParam WRITE setDistParam NOTIFY distParamChanged)
+    Q_PROPERTY(int distType READ distType WRITE setDistType NOTIFY distTypeChanged)
+
+    // Flanger
+    Q_PROPERTY(
+        float flangerDelay READ flangerDelay WRITE setFlangerDelay NOTIFY flangerDelayChanged)
+    Q_PROPERTY(
+        float flangerDepth READ flangerDepth WRITE setFlangerDepth NOTIFY flangerDepthChanged)
+    Q_PROPERTY(float flangerRate READ flangerRate WRITE setFlangerRate NOTIFY flangerRateChanged)
+    Q_PROPERTY(float flangerFeedback READ flangerFeedback WRITE setFlangerFeedback NOTIFY
+                   flangerFeedbackChanged)
+    Q_PROPERTY(float flangerWet READ flangerWet WRITE setFlangerWet NOTIFY flangerWetChanged)
+
     // Feedback delay
     Q_PROPERTY(float delayTime READ delayTime WRITE setDelayTime NOTIFY delayTimeChanged)
     Q_PROPERTY(float feedback READ feedback WRITE setFeedback NOTIFY feedbackChanged)
@@ -314,6 +330,44 @@ public:
         return m_filterLfoShape;
     }
 
+    float distDrive() const
+    {
+        return m_distDrive;
+    }
+    float distMix() const
+    {
+        return m_distMix;
+    }
+    float distParam() const
+    {
+        return m_distParam;
+    }
+    int distType() const
+    {
+        return m_distType;
+    }
+
+    float flangerDelay() const
+    {
+        return m_flangerDelay;
+    }
+    float flangerDepth() const
+    {
+        return m_flangerDepth;
+    }
+    float flangerRate() const
+    {
+        return m_flangerRate;
+    }
+    float flangerFeedback() const
+    {
+        return m_flangerFeedback;
+    }
+    float flangerWet() const
+    {
+        return m_flangerWet;
+    }
+
     float delayTime() const
     {
         return m_delayTime;
@@ -462,6 +516,17 @@ public slots:
     void setFilterLfoDepth(float v);
     void setFilterLfoShape(int v);
 
+    void setDistDrive(float v);
+    void setDistMix(float v);
+    void setDistParam(float v);
+    void setDistType(int v);
+
+    void setFlangerDelay(float v);
+    void setFlangerDepth(float v);
+    void setFlangerRate(float v);
+    void setFlangerFeedback(float v);
+    void setFlangerWet(float v);
+
     void setDelayTime(float v);
     void setFeedback(float v);
 
@@ -531,6 +596,17 @@ signals:
     void filterLfoRateChanged();
     void filterLfoDepthChanged();
     void filterLfoShapeChanged();
+
+    void distDriveChanged();
+    void distMixChanged();
+    void distParamChanged();
+    void distTypeChanged();
+
+    void flangerDelayChanged();
+    void flangerDepthChanged();
+    void flangerRateChanged();
+    void flangerFeedbackChanged();
+    void flangerWetChanged();
 
     void delayTimeChanged();
     void feedbackChanged();
@@ -625,6 +701,17 @@ private:
     float m_filterLfoRate  = 0.5f;
     float m_filterLfoDepth = 0.0f;
     int m_filterLfoShape   = 4; // Triangle
+
+    float m_distDrive = 1.0f;
+    float m_distMix   = 0.0f;
+    float m_distParam = 0.8f;
+    int m_distType    = 1; // SoftClip
+
+    float m_flangerDelay    = 0.005f;  // 5 ms
+    float m_flangerDepth    = 0.0025f; // 2.5 ms
+    float m_flangerRate     = 0.5f;    // 0.5 Hz
+    float m_flangerFeedback = 0.7f;
+    float m_flangerWet      = 0.0f; // off
 
     float m_delayTime = 0.0f;
     float m_feedback  = 0.0f;

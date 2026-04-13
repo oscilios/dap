@@ -323,48 +323,103 @@ ApplicationWindow {
             }
         }
 
-        // All controls
-        ColumnLayout {
+        // Tab bar
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            Layout.topMargin: 4
+            spacing: 2
+
+            Repeater {
+                model: ["SYNTH", "EFFECTS"]
+                Rectangle {
+                    width: 72
+                    height: 22
+                    radius: 3
+                    color: tabStack.currentIndex === index ? "#333" : "transparent"
+                    border.color: tabStack.currentIndex === index ? "#555" : "#333"
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData
+                        font.pixelSize: 9
+                        font.family: "Helvetica Neue"
+                        font.letterSpacing: 2
+                        font.weight: Font.Medium
+                        color: tabStack.currentIndex === index ? "#e0e0e0" : "#777"
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: tabStack.currentIndex = index
+                    }
+                }
+            }
+
+            Item { Layout.fillWidth: true }
+        }
+
+        // Tab content
+        StackLayout {
+            id: tabStack
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: 8
-            spacing: 6
+            currentIndex: 0
 
-            // Row 1: Oscillators + Modulation
-            OscillatorPanel {
-                Layout.fillWidth: true
+            // --- Tab 0: Synth ---
+            ColumnLayout {
+                spacing: 6
+
+                // Row 1: Oscillators + Modulation
+                OscillatorPanel {
+                    Layout.fillWidth: true
+                }
+
+                // Row 2: Modulation + Amp Envelope
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    ModulationPanel {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                    EnvelopePanel {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+
+                // Row 3: Arpeggiator + Sequencer
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    ArpPanel {
+                        Layout.fillHeight: true
+                    }
+                    SequencerPanel {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                    PitchEnvPanel {
+                        Layout.fillHeight: true
+                    }
+                }
             }
 
-            // Row 2: Modulation + Amp Envelope
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
+            // --- Tab 1: Effects ---
+            ColumnLayout {
+                spacing: 6
 
-                ModulationPanel {
+                EffectsPanel {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
                 }
-                EnvelopePanel {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-            }
 
-            // Row 3: Arpeggiator + Sequencer
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                ArpPanel {
-                    Layout.fillHeight: true
-                }
-                SequencerPanel {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-                PitchEnvPanel {
-                    Layout.fillHeight: true
-                }
+                Item { Layout.fillHeight: true }
             }
         }
 
